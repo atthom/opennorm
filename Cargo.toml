@@ -1,0 +1,18 @@
+[package]
+name        = "opennorm"
+version     = "0.1.0"
+edition     = "2021"
+description = "Formal notation for governance documents — parser, checker, transpiler, report"
+
+[[bin]]
+name = "opennorm"
+path = "src/main.rs"
+
+[dependencies]
+pest          = "2.7"
+pest_derive   = "2.7"
+thiserror     = "1.0"
+serde         = { version = "1.0", features = ["derive"] }
+serde_json    = "1.0"
+chrono        = { version = "0.4", features = ["serde"] }
+walkdir       = "2.4"

@@ -1,0 +1,58 @@
+// openlex.pest — OpenNorm Grammar v0.1
+
+// ── Top Level ──────────────────────────────────────────────────
+document       =  { SOI ~ metadata_block ~ section* ~ EOI }
+metadata_block =  { field+ }
+section        =  { separator? ~ header ~ block* }
+block          =  { field | bullet_list | blockquote | prose_block | blank_line }
+
+// ── Structure ──────────────────────────────────────────────────
+header         =  { NEWLINE* ~ header_prefix ~ " "+ ~ header_text ~ NEWLINE }
+header_prefix  = @{ "#"+ }
+header_text    = @{ (!NEWLINE ~ ANY)+ }
+separator      =  { "---" ~ NEWLINE }
+blank_line     =  { NEWLINE+ }
+
+// ── Fields ─────────────────────────────────────────────────────
+field          =  { "**" ~ field_label ~ ":**" ~ " "* ~ field_value_inline? ~ NEWLINE
+                    ~ field_value_block? }
+field_label    = @{ (!(":**") ~ !"*" ~ ANY)+ }
+field_value_inline = { term_inline }
+field_value_block  = { bullet_list }
+
+// ── Prose blocks ───────────────────────────────────────────────
+// Prose contains free text that may include inline *term* and ~~term~~ markers.
+// Full prose term extraction is implemented in the checker via pattern scanning.
+prose_block    =  { prose_line+ }
+prose_line     =  { !("**" | "- " | "> " | "---" | "#") ~ (!NEWLINE ~ ANY)+ ~ NEWLINE }
+
+// ── Bullet Lists (indentation = priority) ──────────────────────
+bullet_list    =  { bullet+ }
+bullet         =  { indent_level ~ "- " ~ term_inline ~ NEWLINE ~ bullet* }
+indent_level   = @{ ("  ")* }    // length / 2 = priority integer
+
+// ── Blockquotes ────────────────────────────────────────────────
+blockquote     =  { blockquote_line+ }
+blockquote_line =  { "> " ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+
+// ── Terms ──────────────────────────────────────────────────────
+term_inline    =  { resolved | fuzzy | plain_term }
+resolved       =  { "*" ~ term_word ~ "*" }           // stdlib reference
+fuzzy          =  { "~~" ~ term_word ~ "~~" }         // intentional flexibility
+plain_term     =  { term_word ~ (" " ~ term_word)* }  // undefined — error or warning
+
+term_word      = @{ ASCII_ALPHANUMERIC+ ~ ("_" ~ ASCII_ALPHANUMERIC+)* }
+
+// ── References ─────────────────────────────────────────────────
+ref_link       =  { "[" ~ ref_text ~ "](" ~ ref_uri ~ ")" }
+ref_text       = @{ (!"]" ~ ANY)+ }
+ref_uri        = @{ (!")" ~ ANY)+ }
+
+// ── Imports ────────────────────────────────────────────────────
+import_entry   = @{ import_path ~ ("@" ~ version_str)? }
+import_path    = @{ (ASCII_ALPHANUMERIC | "/" | "_" | "-" | ".")+ }
+version_str    = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)* }
+
+// ── Whitespace ─────────────────────────────────────────────────
+WHITESPACE     = _{ " " | "\t" }
+NEWLINE        = _{ "\r\n" | "\n" }
