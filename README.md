@@ -32,7 +32,7 @@
 ### 1.1 The Problem with Legal and Governance Documents
 
 Legal documents — licenses, contracts, charters, regulatory frameworks — share a
-structural failure: they are written once, usually under pressure, by a small group,
+structural failure: they are written once, sometimes under a time pressure, by a small group,
 with no formal mechanism to detect internal contradictions, no versioning system,
 no automated testing, and no way to check whether a new clause conflicts with an
 existing one.
