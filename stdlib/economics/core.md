@@ -1,27 +1,15 @@
 # stdlib / economics / core
 
-> Defines economic terms used in license grants and contracts.
-
 **OpenNorm:** 0.1
 **Package:** economics.core
 **Version:** 1.0
 **Status:** review
 
+> Defines economic terms used in license grants and contracts.
+
 ---
 
 ## Manifest
-
-- "free of charge"         → free_of_charge
-- "at no cost"             → free_of_charge
-- "without charge"         → free_of_charge
-- "gratis"                 → free_of_charge
-- "for consideration"      → consideration
-- "for payment"            → consideration
-- "royalty"                → royalty
-- "royalty-free"           → royalty_free
-- "compensation"           → consideration
-
----
 
 ## free_of_charge
 
@@ -33,6 +21,8 @@ the granted rights.
 > for MIT-licensed software. The *free_of_charge* term governs only the
 > permission grant, not downstream commercial activity.
 
+**Forms:** free of charge, at no cost, without charge, gratis
+
 ---
 
 ## consideration
@@ -42,12 +32,16 @@ the granted rights.
 **Relevance:** licenses are unilateral grants and typically do not require
 consideration; contracts do.
 
+**Forms:** for consideration, for payment, compensation
+
 ---
 
 ## royalty
 
 **Meaning:** A recurring payment to a rights holder for the right to exercise
 a licensed right.
+
+**Forms:** royalty
 
 ---
 
@@ -56,3 +50,5 @@ a licensed right.
 **Meaning:** A grant for which no royalty payment is required.
 **Distinct from:** *free_of_charge* — royalty-free still permits a one-time
 upfront fee; free_of_charge permits no fee at any stage.
+
+**Forms:** royalty-free

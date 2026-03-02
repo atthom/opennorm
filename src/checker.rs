@@ -52,10 +52,19 @@ pub fn check(
     let mut fuzzy_terms    = Vec::new();
     let mut undefined_terms = Vec::new();
 
+    // debug: show imports parsed
+    println!("[DEBUG] document imports: {:?}", doc.imports);
+
     // Build manifest index from all imported packages
     let mut manifest = ManifestIndex::new();
     for import in &doc.imports {
         let pkg = registry.load(&import.package, import.version.as_deref())?;
+        // DEBUG: list entries loaded from this package
+        eprintln!("[DEBUG] loaded stdlib package {}@{} ({} entries)",
+                  import.package, pkg.version, pkg.manifest.len());
+        for e in &pkg.manifest {
+            eprintln!("[DEBUG]   surface='{}' canonical='{}'", e.surface, e.canonical);
+        }
         manifest.merge(&pkg.manifest);
     }
 
@@ -353,6 +362,11 @@ fn check_term_in_field(
                 check_term(term, manifest, declared_fuzzies, status, section_name,
                            diags, resolved, fuzzies, undefined, &loc);
             }
+        }
+        FieldValue::Prose(text) => {
+            // prose may contain multiple italicised terms
+            check_terms_in_prose(text, manifest, declared_fuzzies, status, section_name,
+                                 diags, resolved, fuzzies, undefined);
         }
         _ => {}
     }

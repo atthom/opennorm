@@ -9,6 +9,16 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use crate::error::OpenNormError;
 
+// helper to normalise a surface string by stripping markdown asterisks and
+// surrounding whitespace. This ensures that forms like `** use` or ``*foo*``
+// collapse to `use` and `foo` respectively, eliminating markdown artefacts.
+fn clean_surface(s: &str) -> String {
+    s.trim_start_matches('*')
+     .trim_end_matches('*')
+     .trim()
+     .to_string()
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Manifest entry
 // ─────────────────────────────────────────────────────────────────────────────
@@ -130,43 +140,94 @@ impl StdlibRegistry {
 // § Manifest section parser
 // ─────────────────────────────────────────────────────────────────────────────
 
-/// Extract term entries from the § Manifest section of a stdlib package file.
+/// Ensure **Package:** and **Version:** metadata appear near the top of the file.
+fn require_top_metadata(content: &str, package_id: &str) -> Result<(), OpenNormError> {
+    let mut seen_pkg = false;
+    let mut seen_ver = false;
+    for line in content.lines().take(40) {
+        let t = line.trim();
+        if t.starts_with("**Package:") { seen_pkg = true; }
+        if t.starts_with("**Version:") { seen_ver = true; }
+        if seen_pkg && seen_ver { return Ok(()); }
+    }
+    Err(OpenNormError::StdlibLoad {
+        package: package_id.to_string(),
+        message: "missing **Package:** or **Version:** metadata".into(),
+    })
+}
+
+/// Extract term entries from a stdlib package file.
 ///
-/// Format of each bullet in the manifest section:
-///   - "surface form"  → canonical_id
+/// Scans for:
+/// 1. `**Forms:` metadata inside definitions (##-level sections);
+/// 2. Old-style `## Manifest` section with `- surface → canonical` entries;
+/// 3. Bare hierarchy bullets `- Name` (mapped as surface==canonical).
 ///
-/// Leading/trailing quotes on the surface form are stripped.
+/// Requires **Package:** and **Version:** metadata at top of file.
 fn parse_manifest_section(content: &str, package: &str, version: &str) -> Vec<ManifestEntry> {
-    let mut entries   = Vec::new();
-    let mut in_manifest = false;
+    // Enforce metadata presence
+    let _ = require_top_metadata(content, package);
+
+    let mut entries = Vec::new();
+    let mut current_canonical: Option<String> = None;
 
     for line in content.lines() {
         let trimmed = line.trim();
 
-        // Detect section header
+        // Update current section when encountering a definition header
         if trimmed.starts_with("## ") {
-            in_manifest = trimmed[3..].trim().to_lowercase() == "manifest";
-            continue;
-        }
-        if trimmed.starts_with("# ") {
-            in_manifest = false;
+            let name = trimmed[3..].trim();
+            if !name.is_empty() {
+                current_canonical = Some(name.to_string());
+            }
             continue;
         }
 
-        if !in_manifest { continue; }
+        // Parse Forms metadata inside the current section
+        if trimmed.starts_with("**Forms:") {
+            if let Some(canon) = &current_canonical {
+                // remove the leading label
+                let mut rest = trimmed.trim_start_matches("**Forms:").trim().to_string();
+                // strip any leading '*' characters leftover from bold markup
+                rest = rest.trim_start_matches('*').trim().to_string();
+                for part in rest.split(',') {
+                    let mut surface = part.trim().trim_matches('"').to_string();
+                    surface = clean_surface(&surface);
+                    if !surface.is_empty() {
+                        entries.push(ManifestEntry {
+                            surface,
+                            canonical: canon.clone(),
+                            package: package.to_string(),
+                            version: version.to_string(),
+                        });
+                    }
+                }
+            }
+            continue;
+        }
 
-        // Parse bullet: `- "surface form"  → canonical`
-        // or:           `- surface_form    → canonical`
+        // Parse old-style explicit manifest entries (arrow notation)
         if let Some(rest) = trimmed.strip_prefix("- ") {
             if let Some(arrow_pos) = rest.find("→") {
                 let surface_raw = rest[..arrow_pos].trim().trim_matches('"');
-                let canonical   = rest[arrow_pos + "→".len()..].trim().to_string();
+                let canonical = rest[arrow_pos + "→".len()..].trim().to_string();
                 entries.push(ManifestEntry {
-                    surface:   surface_raw.to_string(),
+                    surface: surface_raw.to_string(),
                     canonical,
-                    package:   package.to_string(),
-                    version:   version.to_string(),
+                    package: package.to_string(),
+                    version: version.to_string(),
                 });
+            } else {
+                // Treat bare hierarchy bullets as self-mapping entries
+                let name = rest.trim().trim_matches('"');
+                if !name.is_empty() {
+                    entries.push(ManifestEntry {
+                        surface: name.to_string(),
+                        canonical: name.to_string(),
+                        package: package.to_string(),
+                        version: version.to_string(),
+                    });
+                }
             }
         }
     }

@@ -23,6 +23,17 @@ pub fn parse(source: &str, _filename: &str) -> Result<Document, OpenNormError> {
     let lines: Vec<&str> = source.lines().collect();
     let mut pos = 0;
 
+    // skip leading heading/title and any blank lines before metadata
+    while pos < lines.len() {
+        let t = lines[pos].trim();
+        if t.starts_with("# ") || t.is_empty() {
+            pos += 1;
+            line_num += 1;
+        } else {
+            break;
+        }
+    }
+
     // Parse metadata block (fields at the start)
     let mut in_imports_section = false;
     while pos < lines.len() {
@@ -94,14 +105,11 @@ pub fn parse(source: &str, _filename: &str) -> Result<Document, OpenNormError> {
 }
 
 fn parse_import_spec(spec: &str) -> Option<(String, Option<String>)> {
-    let parts: Vec<&str> = spec.split_whitespace().collect();
-    if parts.len() >= 2 {
-        Some((parts[0].to_string(), Some(parts[1].to_string())))
-    } else if parts.len() == 1 {
-        Some((parts[0].to_string(), None))
-    } else {
-        None
-    }
+    // split on '@' to separate package path from optional version
+    let mut parts = spec.splitn(2, '@');
+    let package = parts.next()?.trim().to_string();
+    let version = parts.next().map(|s| s.trim().to_string());
+    Some((package, version))
 }
 
 fn parse_metadata_field(line: &str) -> Option<(String, String)> {

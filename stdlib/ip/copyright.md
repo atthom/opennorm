@@ -1,28 +1,18 @@
 # stdlib / ip / copyright
 
-> Defines intellectual property terms relevant to software licensing.
-
 **OpenNorm:** 0.1
 **Package:** ip.copyright
 **Version:** 1.0
 **Status:** review
 
+**Imports:**
+- stdlib/actors/core@1.0
+
+> Defines intellectual property terms relevant to software licensing.
+
 ---
 
 ## Manifest
-
-- "copyright notice"           → copyright_notice
-- "copyright"                  → copyright_notice
-- "copyright holder"           → RightsHolder
-- "permission notice"          → permission_notice
-- "license notice"             → permission_notice
-- "derivative work"            → derivative_work
-- "substantial portion"        → substantial_portion
-- "associated documentation"   → associated_documentation
-- "the software"               → Software
-- "software"                   → Software
-
----
 
 ## copyright_notice
 
@@ -32,6 +22,8 @@ creation or publication, in the form: "Copyright (c) [year] [holder]".
 a year or year range, and the name of the holder.
 **Preservation obligation:** when a license requires inclusion of the copyright
 notice, this full form must appear — not a summary or reference to it.
+
+**Forms:** copyright notice, copyright
 
 ---
 
@@ -43,6 +35,8 @@ is available under a named license.
 through the end of the disclaimer.
 **Preservation obligation:** must appear verbatim in all copies or
 ~~substantial portions~~ of the Software.
+
+**Forms:** permission notice, license notice
 
 ---
 
@@ -58,6 +52,8 @@ arrangement of the original; the EU threshold differs.
 **Fuzzy boundary:** ~~derivative threshold~~ — at what point does use of a
 library make the using work a derivative work
 **Review trigger:** relevant appellate ruling
+
+**Forms:** derivative work
 
 ---
 
@@ -76,6 +72,8 @@ centrality to the work's purpose.
 **Fuzzy:** ~~threshold~~ — no numeric definition is possible or desirable here
 **Review trigger:** appellate ruling establishing a threshold
 
+**Forms:** substantial portion
+
 ---
 
 ## associated_documentation
@@ -88,6 +86,8 @@ materials count as "associated documentation files"
 and other content begins
 **Review trigger:** when contested in legal proceedings
 
+**Forms:** associated documentation
+
 ---
 
 ## Software
@@ -96,3 +96,5 @@ and other content begins
 together with its *associated_documentation*.
 **Note:** "Software" in MIT is defined by context — the document being licensed.
 It is a placeholder whose referent is the specific program at point of application.
+
+**Forms:** the software, software
