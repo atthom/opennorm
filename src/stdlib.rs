@@ -212,7 +212,7 @@ fn parse_manifest_section(content: &str, package: &str, version: &str) -> Vec<Ma
                 let surface_raw = rest[..arrow_pos].trim().trim_matches('"');
                 let canonical = rest[arrow_pos + "→".len()..].trim().to_string();
                 entries.push(ManifestEntry {
-                    surface: surface_raw.to_string(),
+                    surface: clean_surface(surface_raw),
                     canonical,
                     package: package.to_string(),
                     version: version.to_string(),
@@ -221,9 +221,10 @@ fn parse_manifest_section(content: &str, package: &str, version: &str) -> Vec<Ma
                 // Treat bare hierarchy bullets as self-mapping entries
                 let name = rest.trim().trim_matches('"');
                 if !name.is_empty() {
+                    let clean = clean_surface(name);
                     entries.push(ManifestEntry {
-                        surface: name.to_string(),
-                        canonical: name.to_string(),
+                        surface: clean.clone(),
+                        canonical: clean,
                         package: package.to_string(),
                         version: version.to_string(),
                     });
@@ -233,4 +234,38 @@ fn parse_manifest_section(content: &str, package: &str, version: &str) -> Vec<Ma
     }
 
     entries
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tests
+// ─────────────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn clean_surface_strips_markdown() {
+        assert_eq!(clean_surface("** use"), "use");
+        assert_eq!(clean_surface("use **"), "use");
+        assert_eq!(clean_surface("*foo*"), "foo");
+        assert_eq!(clean_surface("  *bar*  "), "bar");
+    }
+
+    #[test]
+    fn parse_forms_entries() {
+        let content = "**Package:** foo\n**Version:** 1.0\n\n## example\n**Forms:** alpha, beta, gamma";
+        let entries = parse_manifest_section(content, "foo", "1.0");
+        let surfaces: Vec<_> = entries.into_iter().map(|e| e.surface).collect();
+        assert_eq!(surfaces, vec!["alpha".to_string(), "beta".to_string(), "gamma".to_string()]);
+    }
+
+    #[test]
+    fn parse_old_style_entries() {
+        let content = "**Package:** foo\n**Version:** 1.0\n\n## Manifest\n- alpha → beta\n- gamma";
+        let entries = parse_manifest_section(content, "foo", "1.0");
+        assert!(entries.iter().any(|e| e.surface == "alpha" && e.canonical == "beta"));
+        assert!(entries.iter().any(|e| e.surface == "gamma" && e.canonical == "gamma"));
+    }
 }

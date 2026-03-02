@@ -37,11 +37,11 @@ pub fn build_report(p: &PipelineOutputs) -> String {
 
     // Determine overall result
     let result = if p.checker.error_count > 0 {
-        "❌ INVALID — errors must be resolved"
+        "[INVALID] - errors must be resolved"
     } else if p.checker.warning_count > 0 {
-        "⚠️  VALID WITH WARNINGS"
+        "[VALID WITH WARNINGS]"
     } else {
-        "✅ VALID"
+        "[OK] VALID"
     };
 
     // ── Header ────────────────────────────────────────────────────────────────
@@ -57,31 +57,31 @@ pub fn build_report(p: &PipelineOutputs) -> String {
     // ── Summary table ─────────────────────────────────────────────────────────
     out.push_str("## Summary\n\n");
     out.push_str("| Category | Count |\n|---|---|\n");
-    out.push_str(&format!("| ✅ Resolved terms | {} |\n", p.checker.resolved_terms.len()));
-    out.push_str(&format!("| ⚠️  Fuzzy terms | {} |\n", p.checker.fuzzy_terms.len()));
-    out.push_str(&format!("| ❌ Hard errors | {} |\n", p.checker.error_count));
-    out.push_str(&format!("| ℹ️  Warnings | {} |\n", p.checker.warning_count));
-    out.push_str(&format!("| 🔬 Undefined terms | {} |\n", p.checker.undefined_terms.len()));
+    out.push_str(&format!("| [OK] Resolved terms | {} |\n", p.checker.resolved_terms.len()));
+    out.push_str(&format!("| [FUZZY] Fuzzy terms | {} |\n", p.checker.fuzzy_terms.len()));
+    out.push_str(&format!("| [ERROR] Hard errors | {} |\n", p.checker.error_count));
+    out.push_str(&format!("| [WARN] Warnings | {} |\n", p.checker.warning_count));
+    out.push_str(&format!("| [UNDEF] Undefined terms | {} |\n", p.checker.undefined_terms.len()));
 
     if let Some(lean) = &p.lean_output {
-        out.push_str(&format!("| ✓  Proved theorems | {} |\n", lean.proved.len()));
-        out.push_str(&format!("| ✗  Failed proofs | {} |\n", lean.failed.len()));
-        out.push_str(&format!("| ?  Undecidable | {} |\n", lean.undecidable.len()));
-        out.push_str(&format!("| 📋 Sorry stubs | {} |\n", lean.sorry_count));
+        out.push_str(&format!("| [PASS] Proved theorems | {} |\n", lean.proved.len()));
+        out.push_str(&format!("| [FAIL] Failed proofs | {} |\n", lean.failed.len()));
+        out.push_str(&format!("| [?] Undecidable | {} |\n", lean.undecidable.len()));
+        out.push_str(&format!("| [STUBS] Sorry stubs | {} |\n", lean.sorry_count));
     }
     out.push_str("\n---\n\n");
 
     // ── Stage 1: Parse ────────────────────────────────────────────────────────
-    out.push_str("## Stage 1 — Parse\n\n");
-    out.push_str("✅ Document structure valid\n");
-    out.push_str(&format!("✅ {} sections recognized\n", p.document.sections.len()));
+    out.push_str("## Stage 1 - Parse\n\n");
+    out.push_str("[OK] Document structure valid\n");
+    out.push_str(&format!("[OK] {} sections recognized\n", p.document.sections.len()));
     if let Some(t) = &p.document.template {
-        out.push_str(&format!("✅ Template: `{t}` — required sections checked\n"));
+        out.push_str(&format!("[OK] Template: `{t}` - required sections checked\n"));
     }
     out.push_str("\n---\n\n");
 
     // ── Stage 2: Checker ──────────────────────────────────────────────────────
-    out.push_str("## Stage 2 — Structure\n\n");
+    out.push_str("## Stage 2 - Structure\n\n");
 
     if !p.checker.resolved_terms.is_empty() {
         out.push_str("### Resolved Terms\n\n");
@@ -99,8 +99,8 @@ pub fn build_report(p: &PipelineOutputs) -> String {
         out.push_str("### Fuzzy Terms\n\n");
         out.push_str("| Term | Section | Review Trigger | Declared |\n|---|---|---|---|\n");
         for ft in &p.checker.fuzzy_terms {
-            let trigger = ft.review_trigger.as_deref().unwrap_or("—");
-            let declared = if ft.declared { "✅" } else { "❌ MISSING" };
+            let trigger = ft.review_trigger.as_deref().unwrap_or("-");
+            let declared = if ft.declared { "[DECLARED]" } else { "[MISSING]" };
             out.push_str(&format!(
                 "| `~~{}~~` | {} | {} | {} |\n",
                 ft.name, ft.section, trigger, declared
@@ -114,9 +114,9 @@ pub fn build_report(p: &PipelineOutputs) -> String {
         out.push_str("> These terms are neither resolved (*) nor declared fuzzy (~~).\n\n");
         for ut in &p.checker.undefined_terms {
             let advice = if p.document.status == DocumentStatus::Draft {
-                "⚠️  warning (draft mode)"
+                "[WARN] warning (draft mode)"
             } else {
-                "❌ error"
+                "[ERROR] error"
             };
             out.push_str(&format!("- `{ut}` — {advice}\n"));
         }
@@ -161,22 +161,22 @@ pub fn build_report(p: &PipelineOutputs) -> String {
     out.push_str("---\n\n");
 
     // ── Stage 3: Transpilation ────────────────────────────────────────────────
-    out.push_str("## Stage 3 — Transpilation\n\n");
-    out.push_str("✅ Lean 4 source generated\n");
+    out.push_str("## Stage 3 - Transpilation\n\n");
+    out.push_str("[OK] Lean 4 source generated\n");
     if let Some(lean) = &p.lean_output {
-        out.push_str(&format!("✅ {} proof obligations created\n", lean.proved.len() + lean.failed.len()));
-        out.push_str(&format!("✅ {} sorry stubs for fuzzy terms\n", lean.sorry_count));
+        out.push_str(&format!("[OK] {} proof obligations created\n", lean.proved.len() + lean.failed.len()));
+        out.push_str(&format!("[OK] {} sorry stubs for fuzzy terms\n", lean.sorry_count));
     }
     out.push_str("\n---\n\n");
 
     // ── Stage 4: Lean 4 verification ─────────────────────────────────────────
     if let Some(lean) = &p.lean_output {
-        out.push_str("## Stage 4 — Formal Verification\n\n");
+        out.push_str("## Stage 4 - Formal Verification\n\n");
 
         if !lean.proved.is_empty() {
             out.push_str("### Proved\n\n");
             for p_item in &lean.proved {
-                out.push_str(&format!("- ✅ {p_item}\n"));
+                out.push_str(&format!("- [PASS] {p_item}\n"));
             }
             out.push('\n');
         }
@@ -184,7 +184,7 @@ pub fn build_report(p: &PipelineOutputs) -> String {
         if !lean.failed.is_empty() {
             out.push_str("### Failed\n\n");
             for f in &lean.failed {
-                out.push_str(&format!("- ❌ {f}\n"));
+                out.push_str(&format!("- [FAIL] {f}\n"));
             }
             out.push('\n');
         }
@@ -195,7 +195,7 @@ pub fn build_report(p: &PipelineOutputs) -> String {
             out.push_str("> than hidden ambiguities. Converting invisible problems to visible ones\n");
             out.push_str("> is valuable even when the prover cannot resolve them.\n\n");
             for u in &lean.undecidable {
-                out.push_str(&format!("- ❓ {u}\n"));
+                out.push_str(&format!("- [?] {u}\n"));
             }
             out.push('\n');
         }
@@ -203,7 +203,7 @@ pub fn build_report(p: &PipelineOutputs) -> String {
         // Sorry inventory
         if lean.sorry_count > 0 && !p.document.known_fuzzies.is_empty() {
             out.push_str("### Sorry Inventory\n\n");
-            out.push_str("> Every sorry corresponds to a fuzzy term declared in § Known Ambiguities.\n\
+            out.push_str("> Every sorry corresponds to a fuzzy term declared in section Known Ambiguities.\n\
                           > None are silent gaps. Human judgment is required at point of application.\n\n");
             out.push_str("| Sorry stub | Plain language | Required human action |\n|---|---|---|\n");
             for f in &p.document.known_fuzzies {

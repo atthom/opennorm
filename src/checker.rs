@@ -52,19 +52,10 @@ pub fn check(
     let mut fuzzy_terms    = Vec::new();
     let mut undefined_terms = Vec::new();
 
-    // debug: show imports parsed
-    println!("[DEBUG] document imports: {:?}", doc.imports);
-
     // Build manifest index from all imported packages
     let mut manifest = ManifestIndex::new();
     for import in &doc.imports {
         let pkg = registry.load(&import.package, import.version.as_deref())?;
-        // DEBUG: list entries loaded from this package
-        eprintln!("[DEBUG] loaded stdlib package {}@{} ({} entries)",
-                  import.package, pkg.version, pkg.manifest.len());
-        for e in &pkg.manifest {
-            eprintln!("[DEBUG]   surface='{}' canonical='{}'", e.surface, e.canonical);
-        }
         manifest.merge(&pkg.manifest);
     }
 
@@ -139,12 +130,12 @@ pub fn check(
                 severity:   Severity::Error,
                 code:       "E020",
                 message:    format!(
-                    "Fuzzy term '~~{}~~' in § {} is not declared in § Known Ambiguities",
+                    "Fuzzy term '~~{}~~' in section {} is not declared in section Known Ambiguities",
                     ft.name, ft.section
                 ),
                 location:   Location::default(),
                 suggestion: Some(format!(
-                    "Add '~~{}~~' to § Known Ambiguities with a review trigger",
+                    "Add '~~{}~~' to section Known Ambiguities with a review trigger",
                     ft.name
                 )),
             });
@@ -188,7 +179,7 @@ fn check_template(doc: &Document, template: &str, diags: &mut Vec<Diagnostic>) {
             diags.push(Diagnostic {
                 severity:   Severity::Error,
                 code:       "E001",
-                message:    format!("Template '{template}' requires § {:?} section — not found", req),
+                message:    format!("Template '{template}' requires section {:?} - not found", req),
                 location:   Location::default(),
                 suggestion: Some(format!("Add a ## {:?} section", req)),
             });
@@ -206,7 +197,7 @@ fn check_template(doc: &Document, template: &str, diags: &mut Vec<Diagnostic>) {
                     diags.push(Diagnostic {
                         severity:   Severity::Error,
                         code:       "E002",
-                        message:    format!("§ Grant requires **{}:** field", required_field),
+                        message:    format!("Grant section requires **{}:** field", required_field),
                         location:   grant.location.clone(),
                         suggestion: None,
                     });
@@ -240,7 +231,7 @@ fn detect_conflicts(doc: &Document, diags: &mut Vec<Diagnostic>) {
             severity:   Severity::Error,
             code:       "E030",
             message:    format!(
-                "Conflict: '{}' is simultaneously listed in § Grant (permitted) and § Prohibitions (forbidden)",
+                "Conflict: '{}' is simultaneously listed in Grant (permitted) and Prohibitions (forbidden)",
                 conflict
             ),
             location:   Location::default(),
@@ -260,9 +251,9 @@ fn check_structural_warnings(doc: &Document, diags: &mut Vec<Diagnostic>) {
         diags.push(Diagnostic {
             severity:   Severity::Warning,
             code:       "W001",
-            message:    "No § Jurisdiction declared — governing law is undefined".into(),
+            message:    "No Jurisdiction section declared - governing law is undefined".into(),
             location:   Location::default(),
-            suggestion: Some("Add optional § Jurisdiction section, or acknowledge in § Structural Notes".into()),
+            suggestion: Some("Add optional Jurisdiction section, or acknowledge in Structural Notes".into()),
         });
     }
 
@@ -274,9 +265,9 @@ fn check_structural_warnings(doc: &Document, diags: &mut Vec<Diagnostic>) {
             diags.push(Diagnostic {
                 severity:   Severity::Warning,
                 code:       "W002",
-                message:    "No version governance declared — who controls the name and namespace?".into(),
+                message:    "No version governance declared - who controls the name and namespace?".into(),
                 location:   Location::default(),
-                suggestion: Some("Add a version governance note, or acknowledge in § Structural Notes".into()),
+                suggestion: Some("Add a version governance note, or acknowledge in Structural Notes".into()),
             });
         }
     }
