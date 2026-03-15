@@ -216,7 +216,34 @@ invisible in the rendered output.
 
 ## 3. Architecture Overview
 
-### 3.1 The Full Pipeline
+### 3.1 Infrastructure vs. Documents: The Critical Boundary
+
+OpenNorm enforces a strict architectural boundary between infrastructure and documents:
+
+**Infrastructure Layer (CAN contain Lean code)**
+- `lean/core.lean` - Foundational deontic axioms (hand-written, minimal)
+- `stdlib/frameworks/*.md` - Legal framework axioms (can have `## Lean4` sections)
+- `stdlib/templates/*.md` - Document templates with formal invariants
+- `stdlib/definitions/*.md` - Term definitions with types and lemmas
+- `stdlib/clauses/*.md` - Reusable clause fragments
+
+**Who writes:** System maintainers, formal methods experts, stdlib curators
+
+**Document Layer (MUST be pure markdown)**
+- `licences/*.md` - Software licenses (MIT, Apache, GPL, etc.)
+- `contracts/*.md` - Legal agreements and contracts
+- `regulations/*.md` - Regulatory frameworks (GDPR, HIPAA, etc.)
+- `charters/*.md` - Organizational governance documents
+
+**Who writes:** Legal drafters, compliance officers, community members
+
+**The Rule:** Documents use `*terms*` from stdlib but NEVER write Lean code.
+The transpiler generates all Lean proofs from pure markdown structure.
+
+**Enforcement:** Error E070 blocks any Lean code (`## Lean4` sections or ` ```lean4` blocks)
+in document directories. This ensures legal drafters never need Lean expertise.
+
+### 3.2 The Full Pipeline
 
 ```
 Input: document.md
