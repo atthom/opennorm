@@ -6,23 +6,18 @@
 > condition that the original copyright and permission notice be preserved
 > in all copies or substantial portions of the software.
 >
-> This document is the MIT License encoded in OpenNorm 0.1.
-> The structured sections below are legally equivalent to the standard MIT
-> license text. A reader unfamiliar with OpenNorm reads a standard license
-> document. *Italicised terms* are formally defined in the referenced packages.
-> ~~Struck-through terms~~ are intentionally flexible and declared in
-> § Known Ambiguities below.
+> This version expresses the MIT License purely using Hohfeldian positions
+> through the `holds()` predicate. All legal relationships are represented
+> as Rights, Duties, Privileges, Powers, and Immunities.
 
 **OpenNorm:** 0.1
-**ID:** MIT
-**Version:** 1.0
-**Template:** license
+**Package:** MIT
+**Package-type:** ruling
+**Version:** 2.0
 **Status:** review
 **Imports:**
-- stdlib/actors/core@1.0
-- stdlib/actions/software@1.0
-- stdlib/economics/core@1.0
-- stdlib/ip/copyright@1.0
+
+- stdlib/frameworks/universal/core@2.0
 
 ---
 
@@ -48,50 +43,33 @@
 
 ---
 
----
+## MIT
 
-## Grant
+### MIT Grant
 
-**To:** any *person*
-**Condition:** obtained a copy of the *software*
-**Cost:** *free of charge*
+> The licensor grants broad permissions to any recipient.
+> Ref: https://opensource.org/licenses/MIT
 
-**Permitted:**
-- *use*
-- *copy*
-- *modify*
-- *merge*
-- *publish*
-- *distribute*
-- *sublicense*
-- *sell*
+*Licensor* **may** *use*, *copy*, *modify*, *merge*,
+  *publish*, *distribute*, *sublicense*, *sell*
+  *the Software* to *AnyOne*
+when *AnyOne* has *obtained* *the Software*
 
----
+### MIT Notice Obligation
 
-## Obligations
+*Licensee* **must** *include* *the Copyright Notice* to *AnyOne*
+when *Licensee* has *distributed* *the Software*
 
-**Condition:** *distribute* or *sublicense*
+### MIT No Warranty
 
-**Must include:**
-- *copyright notice*
-- *permission notice*
+*Licensor* **has no right to** *warrant* *the Software* to *Licensee*
 
-**Scope:** in all copies or ~~substantial portion~~ of the *software*
+### MIT No Liability
 
----
+*Licensor* **is protected from** *claim* *damages* by *AnyOne*
+when *AnyOne* has *used* *the Software*
 
-## Permission notice
+### MIT Irrevocability
 
-**To:** any *person*
-
-**Rights:** *use* the *software*, *copy* the *software*, *modify* the *software*, *merge* the *software*, *publish* the *software*, *distribute* the *software*, *sublicense* the *software*, *sell* the *software*
-
-**Condition:** The above copyright notice and this permission notice shall be included in all copies or substantial portions of the *software*.
-
----
-
-## Waivers
-
-**Warranty waived:** all warranties, express or implied
-
-**Liability waived:** all liability, whether in contract, tort, or ~~otherwise~~
+*Licensor* **cannot** *revoke* *the License* to *Licensee*
+when *Licensee* has *obtained* *the Software*
