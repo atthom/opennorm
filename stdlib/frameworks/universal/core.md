@@ -39,18 +39,6 @@
 ### Role Taxonomy
 
 - AnyRole
-  - CollectiveRole
-  - FoyerFiscal
-  - Contribuable
-  - AdministrationFiscale
-  - ExploitantAgricole
-  - TravailleurIndépendant
-  - Propriétaire
-    - PropriétaireMonumentHistorique
-  - LoueurMeubléNonProfessionnel
-    - ShareholderClass
-    - CitizensOfFrance
-    - TreatyParties
   - LicensingRole
     - RightsHolder
     - Licensor

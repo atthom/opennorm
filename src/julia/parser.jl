@@ -496,6 +496,34 @@ function resolve_norm_taxons!(norms::Vector{Norm}, actor_taxonomy::Taxon{Role},
     end
 end
 
+# Safe accessors for CommonMark.Node fields that may be uninitialized
+function cm_first_child(node::CommonMark.Node)
+    try
+        return node.first_child
+    catch e
+        e isa UndefRefError && return nothing
+        rethrow(e)
+    end
+end
+
+function cm_nxt(node::CommonMark.Node)
+    try
+        return node.nxt
+    catch e
+        e isa UndefRefError && return nothing
+        rethrow(e)
+    end
+end
+
+function cm_parent(node::CommonMark.Node)
+    try
+        return node.parent
+    catch e
+        e isa UndefRefError && return nothing
+        rethrow(e)
+    end
+end
+
 # Parse a nested list into a taxonomy tree
 function parse_taxonomy_list(list_node, ::Type{T}) where {T<:TaxonomyEnum}
     root = nothing
@@ -540,21 +568,24 @@ function parse_taxonomy_list(list_node, ::Type{T}) where {T<:TaxonomyEnum}
             stack[depth + 1] = taxon
         end
         
-        # Process nested lists
+        # Find the direct child List node and process only its direct Item children
         for (child, child_entering) in item
-            if child_entering && child.t isa List
+            if child_entering && child.t isa List && cm_parent(child) === item
                 for (nested_item, nested_entering) in child
-                    if nested_entering && nested_item.t isa CommonMark.Item
+                    if nested_entering && nested_item.t isa CommonMark.Item &&
+                       cm_parent(nested_item) === child
                         process_item(nested_item, depth + 1)
                     end
                 end
+                break
             end
         end
     end
     
-    # Process all top-level items
+    # Process only direct top-level items (not nested descendants)
     for (item, item_entering) in list_node
-        if item_entering && item.t isa CommonMark.Item
+        if item_entering && item.t isa CommonMark.Item &&
+           cm_parent(item) === list_node
             process_item(item, 0)
         end
     end
