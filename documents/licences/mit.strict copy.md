@@ -52,24 +52,24 @@
 
 *Licensor* **may** *use*, *copy*, *modify*, *merge*,
   *publish*, *distribute*, *sublicense*, *sell*
-  *the Software* to *AnyOne*
-when *AnyOne* has *obtained* *the Software*
+  the *Software* to *AnyOne*
+when *AnyOne* has *obtained* the *Software*
 
 ### MIT Notice Obligation
 
-*Licensee* **must** *include* *the Copyright Notice* to *AnyOne*
-when *Licensee* has *distributed* *the Software*
+*Licensee* **must** *include* the *Copyright Notice* to *AnyOne*
+when *Licensee* has *distributed* the *Software*
 
 ### MIT No Warranty
 
-*Licensor* **has no right to** *warrant* *the Software* to *Licensee*
+*Licensor* **has no right to** *warrant* the *Software* to *Licensee*
 
 ### MIT No Liability
 
 *Licensor* **is protected from** *claim* *damages* by *AnyOne*
-when *AnyOne* has *used* *the Software*
+when *AnyOne* has *used* the *Software*
 
 ### MIT Irrevocability
 
-*Licensor* **cannot** *revoke* *the License* to *Licensee*
-when *Licensee* has *obtained* *the Software*
+*Licensor* **cannot** *revoke* the *License* to *Licensee*
+when *Licensee* has *obtained* the *Software*
