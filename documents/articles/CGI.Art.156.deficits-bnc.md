@@ -25,6 +25,7 @@
   - Contribuable
   - Professionnel
     - ProfessionLibérale
+  - AdministrationFiscale
 
 ### Action Taxonomy
 

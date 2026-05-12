@@ -23,7 +23,7 @@
 
 ## Taxonomies
 
-### LegalEntities Taxonomy
+### Entity Taxonomy
 
 - AnyOne
   - Individual
@@ -62,7 +62,6 @@
     - publish
     - distribute
     - sublicense
-    - sell
   - Administrative
     - include
     - provide
@@ -80,7 +79,6 @@
   - Employment
     - hire
     - terminate
-    - compensate
   - Work
     - code
     - review

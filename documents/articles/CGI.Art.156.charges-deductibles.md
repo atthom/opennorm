@@ -25,6 +25,7 @@
   - Contribuable
   - Rapatrié
   - Mutualiste
+  - AdministrationFiscale
 
 ### Action Taxonomy
 

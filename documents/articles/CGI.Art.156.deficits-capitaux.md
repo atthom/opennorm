@@ -23,6 +23,7 @@
 
 - AnyRole
   - Contribuable
+  - AdministrationFiscale
 
 ### Action Taxonomy
 

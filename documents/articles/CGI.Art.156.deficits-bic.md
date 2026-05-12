@@ -28,6 +28,7 @@
     - LoueurMeublé
       - LoueurMeubléProfessionnel
       - LoueurMeubléNonProfessionnel
+  - AdministrationFiscale
 
 ### Action Taxonomy
 

@@ -24,6 +24,7 @@
 - AnyRole
   - Propriétaire
     - PropriétaireMonumentHistorique
+  - AdministrationFiscale
 
 ### Action Taxonomy
 

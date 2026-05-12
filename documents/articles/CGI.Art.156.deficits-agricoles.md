@@ -25,6 +25,7 @@
   - Exploitant
     - ExploitantAgricole
   - ChefExploitationAgricole
+  - AdministrationFiscale
 
 ### Action Taxonomy
 

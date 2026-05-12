@@ -14,12 +14,12 @@
 **Imports:**
 
 - stdlib/frameworks/universal/core@2.0
-- cgi.art156.deficits-agricoles@3.0
-- cgi.art156.deficits-bic@3.0
-- cgi.art156.deficits-bnc@3.0
-- cgi.art156.deficits-fonciers@3.0
-- cgi.art156.deficits-capitaux@3.0
-- cgi.art156.charges-deductibles@3.0
+- CGI.Art.156.deficits-agricoles@3.0
+- CGI.Art.156.deficits-bic@3.0
+- CGI.Art.156.deficits-bnc@3.0
+- CGI.Art.156.deficits-fonciers@3.0
+- CGI.Art.156.deficits-capitaux@3.0
+- CGI.Art.156.charges-deductibles@3.0
 
 ---
 
@@ -42,6 +42,16 @@ Ce document principal orchestre l'ensemble des modules thématiques qui composen
   - FoyerFiscal
   - Contribuable
   - AdministrationFiscale
+  - Exploitant
+    - ExploitantAgricole
+  - ChefExploitationAgricole
+  - Propriétaire
+    - PropriétaireMonumentHistorique
+  - Loueur
+    - LoueurMeublé
+      - LoueurMeubléNonProfessionnel
+  - TravailleurIndépendant
+  - Mutualiste
 
 ### Action Taxonomy
 
@@ -49,6 +59,8 @@ Ce document principal orchestre l'ensemble des modules thématiques qui composen
   - établir
   - calculer
   - déduire
+  - imputer
+  - reporter
 
 ---
 
@@ -66,13 +78,26 @@ Ce document principal orchestre l'ensemble des modules thématiques qui composen
       - RevenuImposable
     - Déficit
       - DéficitGénéral
-  - Constants
-    - DuréeReport = 6 *Années*
-  - Parameters
-    - RevenuGlobal = *EUR* (required)
-  - ComputedVariables
-    - RevenuImposable = *EUR*
-    - TotalDéficitsReportables = *EUR*
+      - DéficitAgricole
+      - DéficitBIC
+      - DéficitBNC
+      - DéficitFoncier
+      - DéficitCapitauxMobiliers
+    - Charge
+      - PensionAlimentaire
+      - IntérêtEmprunt
+      - ChargeFoncière
+      - CotisationSociale
+      - Prime
+      - AvantageNature
+  - OpenNormVariables
+    - Constants
+      - DuréeReport = 6 *Années*
+    - Parameters
+      - RevenuGlobal = *EUR* (required)
+    - ComputedVariables
+      - RevenuImposable = *EUR*
+      - TotalDéficitsReportables = *EUR*
 
 ---
 
