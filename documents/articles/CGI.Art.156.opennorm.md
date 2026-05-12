@@ -42,15 +42,16 @@
 
 ### Action Taxonomy
 
-- déduire
-- imputer
-- reporter
-- calculer
-- établir
-- déterminer
-- constater
-- verser
-- reconstituer
+- AnyAction
+  - déduire
+  - imputer
+  - reporter
+  - calculer
+  - établir
+  - déterminer
+  - constater
+  - verser
+  - reconstituer
 
 ## OpenNormTypes
 
@@ -86,6 +87,10 @@
     - Déficit
       - DéficitGénéral
       - DéficitCapitauxMobiliers
+      - DéficitAgricole
+      - DéficitBIC
+      - DéficitBNC
+      - DéficitFoncier
     - Charge
       - ChargeDéductible
       - ChargeFoncière

@@ -86,6 +86,26 @@
     - review
     - deploy
     - design
+  - Tax
+    - declare
+    - pay
+    - file
+    - deduct
+    - apply
+    - impose
+    - audit
+    - collect
+    - assess
+    - refund
+    - withhold
+    - impute
+    - carryforward
+    - calculate
+    - establish
+    - determine
+    - ascertain
+    - remit
+    - reconstitute
 
 ### Object Taxonomy
 
