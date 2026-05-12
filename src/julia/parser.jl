@@ -46,6 +46,64 @@ function plain_with_markers(node::CommonMark.Node)
     return join(result, "")
 end
 
+# Helper function to extract list items with proper formatting for Case expressions
+# Reconstructs list structure with "- " markers and newlines
+function extract_list_for_case(list_node::CommonMark.Node, indent_level::Int=0)
+    result = String[]
+    indent = "  " ^ indent_level
+    
+    for (item, item_entering) in list_node
+        if item_entering && item.t isa CommonMark.Item
+            # Extract item content (paragraphs and nested lists within the item)
+            item_lines = String[]
+            nested_list_text = ""
+            
+            for (child, child_entering) in item
+                if child_entering && child.t isa Paragraph
+                    # Get the paragraph text with markers
+                    para_text = plain_with_markers(child)
+                    push!(item_lines, para_text)
+                elseif child_entering && child.t isa CommonMark.List
+                    # Recursively extract nested list
+                    nested_list_text = extract_list_for_case(child, indent_level + 1)
+                end
+            end
+            
+            # Format the item
+            item_content = join(item_lines, "\n$(indent)      ")
+            if !isempty(item_content)
+                # Check if this is a condition:value pair
+                if occursin(":", item_content)
+                    # Split on first colon to separate condition from value
+                    parts = split(item_content, ":", limit=2)
+                    if length(parts) == 2
+                        condition = strip(parts[1])
+                        value = strip(parts[2])
+                        
+                        # If there's a nested list, append it to the value
+                        if !isempty(nested_list_text)
+                            # Format as: "  - condition:\n      value\n      nested_list"
+                            push!(result, "$(indent)  - $(condition):\n$(indent)      $(value)\n$(nested_list_text)")
+                        else
+                            # Format as: "  - condition:\n      value"
+                            push!(result, "$(indent)  - $(condition):\n$(indent)      $(value)")
+                        end
+                    else
+                        push!(result, "$(indent)  - $(item_content)")
+                    end
+                else
+                    push!(result, "$(indent)  - $(item_content)")
+                end
+            elseif !isempty(nested_list_text)
+                # Item has only a nested list, no paragraph content
+                push!(result, nested_list_text)
+            end
+        end
+    end
+    
+    return join(result, "\n")
+end
+
 # Helper to process list items with a callback
 function process_list_items(list_node, callback)
     for (item, item_entering) in list_node
@@ -65,10 +123,10 @@ function parse_document(path, project_root=pwd(), import_chain=String[])
     ast = parser(read(path, String))
     m = parse_manifest(ast)
 
-    entities = parse_taxonomy(ast, Entity)
-    roles = parse_taxonomy(ast, Role)
-    actions = parse_taxonomy(ast, Action)
-    objects = parse_taxonomy(ast, Object)
+    entities = parse_taxonomy(ast, Entity, m.package)
+    roles = parse_taxonomy(ast, Role, m.package)
+    actions = parse_taxonomy(ast, Action, m.package)
+    objects = parse_taxonomy(ast, Object, m.package)
 
     norms = parse_norms(ast, m.package)
 
@@ -110,6 +168,10 @@ function parse_document(path, project_root=pwd(), import_chain=String[])
         print_validation_report(validation_errors)
         println(stderr, "⚠️  Validation failed. Returning partial DocumentIR with validation errors.\n")
     end
+    
+    # NOTE: Dimensional analysis is now performed once after document merge
+    # in opennorm.jl, just before satisfiability checking.
+    # This avoids running it multiple times during recursive document parsing.
 
     return DocumentIR(
         manifest=m,
@@ -397,7 +459,7 @@ get_default_taxonomy(::Type{Action}) = Taxon(Action, "")
 get_default_taxonomy(::Type{Object}) = Taxon(Object, "")
 
 # Parse a taxonomy section from the AST
-function parse_taxonomy(ast, ::Type{T}) where {T<:TaxonomyEnum}
+function parse_taxonomy(ast, ::Type{T}, package_name::String="") where {T<:TaxonomyEnum}
     taxonomy_name = get_taxonomy(T)
     
     in_taxonomy = false
@@ -425,7 +487,7 @@ function parse_taxonomy(ast, ::Type{T}) where {T<:TaxonomyEnum}
         
         # Parse list items within the taxonomy section
         if in_taxonomy && t isa List
-            root = parse_taxonomy_list(node, T)
+            root = parse_taxonomy_list(node, T, package_name)
             break
         end
     end
@@ -525,7 +587,7 @@ function cm_parent(node::CommonMark.Node)
 end
 
 # Parse a nested list into a taxonomy tree
-function parse_taxonomy_list(list_node, ::Type{T}) where {T<:TaxonomyEnum}
+function parse_taxonomy_list(list_node, ::Type{T}, package_name::String="") where {T<:TaxonomyEnum}
     root = nothing
     stack = Vector{Union{Nothing, Taxon{T}}}()
     
@@ -546,7 +608,7 @@ function parse_taxonomy_list(list_node, ::Type{T}) where {T<:TaxonomyEnum}
         # Create the taxon
         if depth == 0
             # Root level
-            taxon = Taxon(T, text)
+            taxon = Taxon(T, text, package_name)
             if root === nothing
                 root = taxon
             end
@@ -554,10 +616,10 @@ function parse_taxonomy_list(list_node, ::Type{T}) where {T<:TaxonomyEnum}
             # Child level - attach to parent
             parent = stack[depth]
             if parent !== nothing
-                taxon = Taxon(parent, text)
+                taxon = Taxon(parent, text, package_name)
             else
                 # No parent found, create as root
-                taxon = Taxon(T, text)
+                taxon = Taxon(T, text, package_name)
             end
         end
         
@@ -947,9 +1009,63 @@ function merge_taxonomies(base::Taxon{T}, imported::Taxon{T}, taxonomy_name::Str
         end
     end
     
-    # If no conflicts and base has content, return base
-    # TODO: Implement actual tree merging for non-empty base
-    return base
+    # If no conflicts, merge the trees
+    # We need to recursively merge imported children into base
+    return merge_taxonomy_trees(base, imported)
+end
+
+# Recursively merge two taxonomy trees
+function merge_taxonomy_trees(base::Taxon{T}, imported::Taxon{T}) where {T<:TaxonomyEnum}
+    # If base is empty, return imported
+    if isempty(base.name) && isempty(base.children)
+        return imported
+    end
+    
+    # If imported is empty, return base
+    if isempty(imported.name) && isempty(imported.children)
+        return base
+    end
+    
+    # Create a new merged taxon with base's name and source (local wins)
+    merged = Taxon(T, base.name, base.source)
+    
+    # First, add all children from base
+    for base_child in base.children
+        push!(merged.children, base_child)
+        base_child.parent = merged
+    end
+    
+    # Then, merge in children from imported
+    for imported_child in imported.children
+        # Check if this child already exists in base
+        existing_idx = findfirst(c -> c.name == imported_child.name, merged.children)
+        
+        if existing_idx !== nothing
+            # Child exists - recursively merge (local wins, keeps base's source)
+            existing_child = merged.children[existing_idx]
+            merged_child = merge_taxonomy_trees(existing_child, imported_child)
+            merged.children[existing_idx] = merged_child
+            merged_child.parent = merged
+        else
+            # Child doesn't exist - add it with its import source preserved
+            new_child = deep_copy_taxon(imported_child)
+            push!(merged.children, new_child)
+            new_child.parent = merged
+        end
+    end
+    
+    return merged
+end
+
+# Deep copy a taxon and all its children
+function deep_copy_taxon(taxon::Taxon{T}) where {T<:TaxonomyEnum}
+    copy = Taxon(T, taxon.name, taxon.source)
+    for child in taxon.children
+        child_copy = deep_copy_taxon(child)
+        push!(copy.children, child_copy)
+        child_copy.parent = copy
+    end
+    return copy
 end
 
 # Merge multiple taxonomies
@@ -963,5 +1079,144 @@ function merge_all_taxonomies(::Type{T}, base::Taxon{T}, imported_list::Vector{T
     end
     
     return result
+end
+
+"""
+    parse_procedures(ast::CommonMark.Node, document_path::String="")
+
+Parse operational layer procedures from a markdown document.
+Procedures are defined as level-2 headings with names in asterisks (e.g., ## *ProcedureName*)
+followed by an optional blockquote description and a Case/CumulativeCase construct.
+
+Returns a vector of Procedure structs.
+"""
+function parse_procedures(ast::CommonMark.Node, document_path::String="")
+    procedures = Procedure[]
+    
+    # Track if we're in the operational layer section
+    in_operational_layer = false
+    current_procedure_name = nothing
+    current_description = nothing
+    current_line = 0
+    
+    for (node, entering) in ast
+        if entering && node.t isa Heading
+            # Use plain_with_markers to preserve asterisks in headings
+            heading_text = strip(plain_with_markers(node))
+            
+            # Check if we've entered the operational layer
+            if node.t.level == 2 && occursin(r"LAYER 2.*OPERATIONAL"i, heading_text)
+                in_operational_layer = true
+                continue
+            end
+            
+            # Check if we've left the operational layer (entering Layer 3 or beyond)
+            if node.t.level == 2 && occursin(r"LAYER [3-9]"i, heading_text)
+                in_operational_layer = false
+                continue
+            end
+            
+            # Parse procedure headings (## *ProcedureName*)
+            if in_operational_layer && node.t.level == 2
+                # Match headings with asterisks: ## *VariableName*
+                m = match(r"^\*([^*]+)\*$", heading_text)
+                if m !== nothing
+                    current_procedure_name = m.captures[1]
+                    current_description = nothing
+                    current_line = node.sourcepos !== nothing ? node.sourcepos[1][1] : 0
+                end
+            end
+        elseif entering && node.t isa BlockQuote && current_procedure_name !== nothing
+            # Extract description from blockquote
+            current_description = strip(plain(node))
+        elseif entering && node.t isa Paragraph && current_procedure_name !== nothing
+            # Look for Case:, CumulativeCase:, or simple assignment expressions
+            para_text = strip(plain_with_markers(node))
+            
+            # Skip empty paragraphs
+            if isempty(para_text)
+                continue
+            end
+            
+            # Check if this is an expression (Case, CumulativeCase, or assignment)
+            is_case = startswith(para_text, "Case:") || startswith(para_text, "CumulativeCase:")
+            is_assignment = occursin(r"^\*[^*]+\*\s*=\s*", para_text)
+            
+            if is_case || is_assignment
+                # For multi-line expressions, collect all subsequent paragraphs until next heading
+                expression_text = para_text
+                
+                # Look ahead for continuation paragraphs
+                found_current = false
+                for (lookahead_node, lookahead_entering) in ast
+                    if !lookahead_entering
+                        continue
+                    end
+                    
+                    # Skip until we find current node
+                    if lookahead_node === node
+                        found_current = true
+                        continue
+                    end
+                    
+                    if !found_current
+                        continue
+                    end
+                    
+                    # Stop at next heading
+                    if lookahead_node.t isa Heading
+                        break
+                    end
+                    
+                    # Collect continuation paragraphs (indented or starting with operators/variables)
+                    if lookahead_node.t isa Paragraph
+                        continuation_text = strip(plain_with_markers(lookahead_node))
+                        # Check if this looks like a continuation (starts with operator or variable)
+                        if !isempty(continuation_text) && 
+                           (startswith(continuation_text, "-") || 
+                            startswith(continuation_text, "+") ||
+                            startswith(continuation_text, "*") ||
+                            occursin(r"^\s+", plain(lookahead_node)))  # Check original for indentation
+                            expression_text *= " " * continuation_text
+                        else
+                            # Not a continuation, stop
+                            break
+                        end
+                    # Also collect List nodes (for Case expressions with list items)
+                    elseif lookahead_node.t isa List
+                        list_text = extract_list_for_case(lookahead_node)
+                        if !isempty(list_text)
+                            expression_text *= "\n" * list_text
+                        end
+                        break  # Stop after processing list to prevent duplicate processing of items
+                    end
+                end
+                
+                # Create location string
+                location = if !isempty(document_path)
+                    basename(document_path) * ":line $current_line"
+                else
+                    "line $current_line"
+                end
+                
+                # Create procedure with raw expression text
+                # Type resolution will happen in a separate phase
+                proc = Procedure(
+                    current_procedure_name,
+                    current_description,
+                    expression_text,  # Store raw text, not parsed AST
+                    location
+                )
+                
+                push!(procedures, proc)
+                
+                # Reset for next procedure
+                current_procedure_name = nothing
+                current_description = nothing
+            end
+        end
+    end
+    
+    return procedures
 end
 

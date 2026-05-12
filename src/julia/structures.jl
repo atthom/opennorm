@@ -118,15 +118,16 @@ Base.@kwdef mutable struct Taxon{T<:TaxonomyEnum} <: IRNode
     name::String
     parent::Union{Nothing, Taxon{T}} = nothing
     children::Vector{Taxon{T}} = Vector{Taxon{T}}()
+    source::String = ""  # Package name that defined this taxon
 end
 
 AbstractTrees.children(n::Taxon{T}) where T = n.children
 AbstractTrees.parent(n::Taxon{T}) where T = n.parent
 
-Taxon(::Type{T}, name::String) where {T<:TaxonomyEnum} = Taxon{T}(name, nothing, Vector{Taxon{T}}())
+Taxon(::Type{T}, name::String, source::String="") where {T<:TaxonomyEnum} = Taxon{T}(name, nothing, Vector{Taxon{T}}(), source)
 
-function Taxon(parent::Taxon{T}, name::String) where {T<:TaxonomyEnum} 
-    t = Taxon{T}(name, parent, Taxon{T}[])
+function Taxon(parent::Taxon{T}, name::String, source::String="") where {T<:TaxonomyEnum} 
+    t = Taxon{T}(name, parent, Taxon{T}[], source)
     push!(parent.children, t)
     return t
 end
@@ -295,4 +296,14 @@ Base.@kwdef struct DocumentIR
     actionTaxonomy::Taxon{Action} = Taxon(Action, "")
     objectTaxonomy::Taxon{Object} = Taxon(Object, "")
     norms::Vector{Norm}
+end
+
+# Operational Layer: Procedure structure
+# Represents a computational procedure from Layer 2 that calculates a ComputedVariable
+# The expression is stored as raw text; type resolution happens in a separate phase
+struct Procedure
+    name::String                           # Output variable name (e.g., "DéficitAgricoleImputable")
+    description::Union{Nothing, String}    # Optional description from blockquote
+    expression_text::String                # Raw expression text (e.g., "Case(...)" or "Variable = Expression")
+    location::String                       # Source location for error messages (e.g., "CGI.Art.156:line 531")
 end
