@@ -42,10 +42,14 @@
 
 - AnyThing
   - Units
-    - EUR (Currency)
-    - Années (Duration)
-    - Date
-    - Boolean (*Oui*, *Non*)
+    - Currency
+      - EUR
+    - Time
+      - Duration
+        - Années (alias: yr)
+    - Time
+      - Date
+    - Boolean
     - TypePropriétéType (*MonumentHistorique*, *Standard*)
     - ClasseÉnergétiqueType (*A*, *B*, *C*, *D*, *E*, *F*, *G*, *Autre*)
   - Concepts

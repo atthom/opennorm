@@ -40,10 +40,14 @@
 
 - AnyThing
   - Units
-    - EUR (Currency)
-    - Années (Duration)
-    - Date
-    - Boolean (*Oui*, *Non*)
+    - Currency
+      - EUR
+    - Time
+      - Duration
+        - Années (alias: yr)
+    - Time
+      - Date
+    - Boolean
     - TypeBénéficiaireType (*DescendantMineur*, *Ascendant*, *Autre*)
     - TypeCotisationType (*GensDeMaison*, *Autre*)
   - Concepts
@@ -55,10 +59,8 @@
   - OpenNormVariables
     - Constants
       - ÂgeMinimum = 75 *Années*
-      - PlafondPensionEnfantMajeur = *AbattementArt196B*
       - PlafondRenteEnfant = 2 700 *EUR*
       - PlafondAvantagesNature = 4 039 *EUR*
-        revised-by: *BarèmePremièreTranche*
     - Parameters
       - TypeBénéficiaire = *TypeBénéficiaireType*
       - PrisEnCompteQuotientFamilial = *Boolean*
@@ -137,7 +139,7 @@ et *VersementsRente* <= *PlafondRenteEnfant*
 
 *Contribuable* **a le droit de** *déduire* la *PensionAlimentaire* à *AdministrationFiscale* envers *RevenuGlobal*
 lorsque *TypeBénéficiaire* = *EnfantMajeur*
-et *MontantPensionAlimentaire* <= *PlafondPensionEnfantMajeur*
+et *MontantPensionAlimentaire* <= *AbattementArt196B*
 {#art156-II-2-enfant-majeur}
 
 ---
@@ -204,11 +206,11 @@ Case:
 
 Case:
   - *EnfantMarié* = *Oui* AND *ParticipationSeule* = *Oui*:
-      min(*MontantPensionAlimentaire*, *PlafondPensionEnfantMajeur* × 2)
+      min(*MontantPensionAlimentaire*, *AbattementArt196B* × 2)
   - *EnfantMarié* = *Oui*:
-      min(*MontantPensionAlimentaire*, *PlafondPensionEnfantMajeur*)
+      min(*MontantPensionAlimentaire*, *AbattementArt196B*)
   - Default:
-      min(*MontantPensionAlimentaire*, *PlafondPensionEnfantMajeur*)
+      min(*MontantPensionAlimentaire*, *AbattementArt196B*)
 
 ---
 

@@ -45,9 +45,12 @@
 
 - AnyThing
   - Units
-    - EUR (Currency)
-    - Années (Duration)
-    - Boolean (*Oui*, *Non*)
+    - Currency
+      - EUR
+    - Time
+      - Duration
+        - Années (alias: yr)
+    - Boolean
     - ParticipationPersonnelleType (*Absente*, *Présente*)
     - StatutLocationType (*NonProfessionnel*, *ProfessionnelDèsDébut*)
   - Concepts

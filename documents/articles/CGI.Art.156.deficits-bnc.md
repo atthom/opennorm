@@ -41,8 +41,11 @@
 
 - AnyThing
   - Units
-    - EUR (Currency)
-    - Années (Duration)
+    - Currency
+      - EUR
+    - Time
+      - Duration
+        - Années (alias: yr)
     - TypeActivitéType (*ProfessionLibérale*, *ChargeOffice*, *Autre*)
   - Concepts
     - Déficit

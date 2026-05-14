@@ -39,8 +39,11 @@
 
 - AnyThing
   - Units
-    - EUR (Currency)
-    - Années (Duration)
+    - Currency
+      - EUR
+    - Time
+      - Duration
+        - Années (alias: yr)
   - Concepts
     - Déficit
       - DéficitCapitauxMobiliers

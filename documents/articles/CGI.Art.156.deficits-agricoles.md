@@ -43,10 +43,13 @@
 
 - AnyThing
   - Units
-    - EUR (Currency)
-    - Années (Duration)
-    - Date
-    - Boolean (*Oui*, *Non*)
+    - Currency
+      - EUR
+    - Time
+      - Duration
+        - Années (alias: yr)
+      - Date
+    - Boolean
   - Concepts
     - Revenu
       - RevenuBrut
@@ -60,9 +63,7 @@
   - OpenNormVariables
     - Constants
       - SeuilRevenuAutres = 127 677 *EUR*
-        revised-by: *BarèmePremièreTranche*
       - DuréeReport = 6 *Années*
-      - LimiteDéduction = *LimiteArt154bis0A*
     - Parameters
       - RevenuAutresSources = *EUR* (required)
       - DéficitAgricole = *EUR*
@@ -121,7 +122,7 @@ lorsque *ExploitantAgricole* a *ContratAssuranceL752_1_21*
 
 *ChefExploitationAgricole* **a le droit de** *déduire* la *CotisationSociale* à *AdministrationFiscale* envers *RevenuGlobal*
 lorsque *ChefExploitationAgricole* a *ContratAssuranceGroupeL144_1*
-et *MontantCotisationsGroupe* <= *LimiteDéduction*
+et *MontantCotisationsGroupe* <= *LimiteArt154bis0A*
 {#art156-II-13-assurances-groupe}
 
 ---
@@ -168,7 +169,7 @@ Case:
 
 > Cotisations d'assurance de groupe pour chefs d'exploitation agricole
 
-*CotisationsAssuranceGroupeAgricole* = min(*MontantCotisationsGroupe*, *LimiteDéduction*)
+*CotisationsAssuranceGroupeAgricole* = min(*MontantCotisationsGroupe*, *LimiteArt154bis0A*)
 
 ---
 
