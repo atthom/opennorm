@@ -109,11 +109,9 @@
 
 - AnyThing
   - Units
-    - EUR (Currency)
-    - USD (Currency)
-    - Années (Duration)
-    - Date
-    - Boolean (*Oui*, *Non*, *True*, *False*)
+    - Time
+      - Date
+    - Boolean
   - Physical
     - Land
     - Goods
