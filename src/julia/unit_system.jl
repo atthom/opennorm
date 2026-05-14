@@ -3,28 +3,10 @@ using Unitful: @dimension, @derived_dimension, @refunit, @unit
 
 # Structure to hold unit definitions extracted from taxonomy
 struct UnitDefinition
-    name::String           # "EUR", "Années", etc.
-    category::String       # "Currency", "Duration", etc.
-    base_dimension::Symbol # :currency, :time, :dimensionless
+    name::String                      # "EUR", "Années", etc.
+    dimension_path::Vector{String}    # ["Currency"], ["Time", "Duration"], etc.
+    alias::Union{Nothing, String}     # "yr", "mo", etc. for mapping to Unitful
 end
-
-# Map taxonomy categories to Unitful dimensions
-const CATEGORY_TO_DIMENSION = Dict{String, Symbol}(
-    "Currency" => :currency,
-    "Duration" => :time,
-    "Percentage" => :dimensionless,
-    "Distance" => :length,
-    "Mass" => :mass,
-    "" => :dimensionless  # No category = dimensionless
-)
-
-# Map common unit names to Unitful equivalents
-const UNIT_ALIASES = Dict{String, String}(
-    "Années" => "yr",
-    "Mois" => "mo",
-    "Jours" => "d",
-    "%" => "NoUnits"
-)
 
 # Global registry of registered units
 const UNIT_REGISTRY = Dict{String, Unitful.FreeUnits}()
@@ -33,7 +15,17 @@ const UNIT_REGISTRY = Dict{String, Unitful.FreeUnits}()
     extract_units_from_taxonomy(object_taxonomy::Taxon{Object})
 
 Extract unit definitions from the Units section of the Object taxonomy.
+Walks the hierarchy to extract dimension paths and aliases.
 Returns a vector of UnitDefinition structs.
+
+Example hierarchy:
+  - Units
+    - Currency
+      - EUR
+      - USD
+    - Time
+      - Duration
+        - Années (alias: yr)
 """
 function extract_units_from_taxonomy(object_taxonomy::Taxon{Object})
     units = UnitDefinition[]
@@ -45,42 +37,64 @@ function extract_units_from_taxonomy(object_taxonomy::Taxon{Object})
         return units
     end
     
-    # Extract each unit definition
-    for unit_node in units_node.children
-        name_with_category = unit_node.name
-        
-        # Parse category from parentheses: "EUR (Currency)" -> ("EUR", "Currency")
-        name, category = parse_unit_declaration(name_with_category)
-        
-        # Determine base dimension
-        dimension = get(CATEGORY_TO_DIMENSION, category, :dimensionless)
-        
-        push!(units, UnitDefinition(name, category, dimension))
-    end
+    # Recursively extract units from the hierarchy
+    extract_units_recursive!(units, units_node, String[])
     
     return units
 end
 
 """
-    parse_unit_declaration(text::String)
+    extract_units_recursive!(units::Vector{UnitDefinition}, 
+                            node::Taxon{Object}, 
+                            path::Vector{String})
 
-Parse a unit declaration like "EUR (Currency)" into name and category.
-Returns (name, category) tuple.
+Recursively walk the Units taxonomy to extract unit definitions.
+Leaf nodes are units, intermediate nodes define dimension hierarchy.
 """
-function parse_unit_declaration(text::String)
+function extract_units_recursive!(units::Vector{UnitDefinition}, 
+                                 node::Taxon{Object}, 
+                                 path::Vector{String})
+    # If this node has children, it's a dimension category - recurse
+    if !isempty(node.children)
+        for child in node.children
+            # Add current node name to path (unless it's the root "Units" node)
+            new_path = isempty(node.name) || node.name == "Units" ? path : [path; node.name]
+            extract_units_recursive!(units, child, new_path)
+        end
+    else
+        # Leaf node - this is an actual unit
+        unit_name, alias = parse_unit_with_alias(node.name)
+        
+        # Create unit definition with the dimension path
+        push!(units, UnitDefinition(unit_name, path, alias))
+    end
+end
+
+"""
+    parse_unit_with_alias(text::String)
+
+Parse a unit declaration that may include an alias.
+Examples:
+  - "EUR" -> ("EUR", nothing)
+  - "Années (alias: yr)" -> ("Années", "yr")
+  - "ISO8601" -> ("ISO8601", nothing)
+
+Returns (unit_name, alias) tuple.
+"""
+function parse_unit_with_alias(text::String)
     text = strip(text)
     
-    # Match pattern: "Name (Category)" or just "Name"
-    m = match(r"^([^(]+?)(?:\s*\(([^)]+)\))?$", text)
+    # Match pattern: "Name (alias: value)" or just "Name"
+    m = match(r"^([^(]+?)(?:\s*\(alias:\s*([^)]+)\))?$", text)
     
     if m === nothing
-        return (text, "")
+        return (text, nothing)
     end
     
     name = strip(m.captures[1])
-    category = m.captures[2] !== nothing ? strip(m.captures[2]) : ""
+    alias = m.captures[2] !== nothing ? strip(m.captures[2]) : nothing
     
-    return (name, category)
+    return (name, alias)
 end
 
 """
@@ -98,99 +112,98 @@ function find_child_by_name(taxon::Taxon{T}, name::String) where {T<:TaxonomyEnu
 end
 
 """
+    generate_unit_dynamically(unit_name::String)
+
+Dynamically generate a Unitful dimension and unit at runtime.
+Each unit gets its own dimension to prevent mixing (e.g., EUR and USD are incompatible).
+"""
+function generate_unit_dynamically(unit_name::String)
+    # Create unique dimension and unit names
+    dim_name = Symbol(unit_name * "Dim")
+    dim_type_name = Symbol(unit_name * "Dimension")
+    unit_type_name = Symbol(unit_name * "Unit")
+    unit_symbol = Symbol(unit_name)
+    
+    # Generate dimension using eval
+    # @dimension creates a new dimension type
+    eval(quote
+        @dimension $dim_name $unit_name $dim_type_name true
+    end)
+    
+    # Generate reference unit using eval
+    # @refunit creates a unit with the specified dimension
+    eval(quote
+        @refunit $unit_symbol $unit_name $unit_type_name $dim_name true
+    end)
+    
+    # Return the generated unit
+    return eval(unit_symbol)
+end
+
+"""
     register_units!(unit_defs::Vector{UnitDefinition})
 
 Dynamically register units with Unitful based on taxonomy definitions.
+Uses the dimension_path from the hierarchy to determine how to register each unit.
 Returns a dictionary mapping unit names to Unitful.FreeUnits.
 """
 function register_units!(unit_defs::Vector{UnitDefinition})
     # Clear previous registry
     empty!(UNIT_REGISTRY)
     
-    # Group units by dimension
-    by_dimension = Dict{Symbol, Vector{UnitDefinition}}()
     for unit in unit_defs
-        if !haskey(by_dimension, unit.base_dimension)
-            by_dimension[unit.base_dimension] = UnitDefinition[]
-        end
-        push!(by_dimension[unit.base_dimension], unit)
-    end
-    
-    # Register currency dimension if needed
-    if haskey(by_dimension, :currency)
-        register_currency_units!(by_dimension[:currency])
-    end
-    
-    # Map time units to existing Unitful time dimension
-    if haskey(by_dimension, :time)
-        register_time_units!(by_dimension[:time])
-    end
-    
-    # Handle dimensionless units
-    if haskey(by_dimension, :dimensionless)
-        register_dimensionless_units!(by_dimension[:dimensionless])
-    end
-    
-    return UNIT_REGISTRY
-end
-
-"""
-    register_currency_units!(units::Vector{UnitDefinition})
-
-Register currency units with Unitful.
-Uses the generated currency dimensions from generated_currency_units.jl.
-"""
-function register_currency_units!(units::Vector{UnitDefinition})
-    # Currency units are now defined at top level in generated_currency_units.jl
-    # We just need to add them to our registry
-    
-    for unit in units
-        # Check if the currency unit was generated and is available
-        currency_symbol = Symbol(unit.name)
-        if isdefined(Main, currency_symbol)
-            # Get the unit from the global scope
-            currency_unit = getfield(Main, currency_symbol)
-            UNIT_REGISTRY[unit.name] = currency_unit
-        else
-            @warn "Currency unit $(unit.name) not found in generated units. Using dimensionless fallback."
+        try
+            # Determine how to register based on the dimension path
+            if isempty(unit.dimension_path)
+                # No path - treat as dimensionless (e.g., Boolean at root level)
+                UNIT_REGISTRY[unit.name] = Unitful.NoUnits
+                
+            elseif unit.dimension_path[1] == "Currency"
+                # Currency units - each gets its own dimension
+                unit_obj = generate_unit_dynamically(unit.name)
+                UNIT_REGISTRY[unit.name] = unit_obj
+                
+            elseif unit.dimension_path[1] == "Time"
+                # Time-related units
+                if unit.alias !== nothing
+                    # Has alias - map to Unitful's time dimension
+                    UNIT_REGISTRY[unit.name] = uparse(unit.alias)
+                elseif length(unit.dimension_path) > 1 && unit.dimension_path[2] == "Date"
+                    # Date formats are dimensionless
+                    UNIT_REGISTRY[unit.name] = Unitful.NoUnits
+                else
+                    # Try to parse as Unitful time unit
+                    try
+                        UNIT_REGISTRY[unit.name] = uparse(unit.name)
+                    catch
+                        @warn "Could not map time unit $(unit.name) to Unitful, treating as dimensionless"
+                        UNIT_REGISTRY[unit.name] = Unitful.NoUnits
+                    end
+                end
+                
+            elseif unit.dimension_path[1] == "Percentage"
+                # Percentages are dimensionless
+                UNIT_REGISTRY[unit.name] = Unitful.NoUnits
+                
+            elseif unit.dimension_path[1] == "Boolean"
+                # Booleans are dimensionless
+                UNIT_REGISTRY[unit.name] = Unitful.NoUnits
+                
+            else
+                # Unknown dimension category - try to handle generically
+                # For now, generate a custom dimension
+                @warn "Unknown dimension category: $(unit.dimension_path[1]), generating custom dimension"
+                unit_obj = generate_unit_dynamically(unit.name)
+                UNIT_REGISTRY[unit.name] = unit_obj
+            end
+            
+        catch e
+            @warn "Failed to register unit $(unit.name): $e"
             UNIT_REGISTRY[unit.name] = Unitful.NoUnits
         end
     end
-end
-
-"""
-    register_time_units!(units::Vector{UnitDefinition})
-
-Register time units by mapping to existing Unitful time units.
-"""
-function register_time_units!(units::Vector{UnitDefinition})
-    for unit in units
-        # Check if there's an alias
-        if haskey(UNIT_ALIASES, unit.name)
-            alias = UNIT_ALIASES[unit.name]
-            # Map to existing Unitful unit
-            UNIT_REGISTRY[unit.name] = uparse(alias)
-        else
-            # Try to parse directly
-            try
-                UNIT_REGISTRY[unit.name] = uparse(unit.name)
-            catch
-                @warn "Could not map time unit $(unit.name) to Unitful"
-            end
-        end
-    end
-end
-
-"""
-    register_dimensionless_units!(units::Vector{UnitDefinition})
-
-Register dimensionless units (percentages, booleans, dates).
-"""
-function register_dimensionless_units!(units::Vector{UnitDefinition})
-    for unit in units
-        # All dimensionless units map to NoUnits
-        UNIT_REGISTRY[unit.name] = Unitful.NoUnits
-    end
+    
+    return UNIT_REGISTRY
 end
 
 """
@@ -208,10 +221,33 @@ function build_type_environment(object_taxonomy::Taxon{Object})
         return type_env  # No variables defined
     end
     
+    # Helper function to recursively collect all nodes that look like variable declarations
+    # This includes both leaf nodes and nodes with children (which may have metadata)
+    function collect_variable_declarations(node::Taxon{Object})
+        declarations = Taxon{Object}[]
+        
+        # Check if this node looks like a variable declaration (has = in the name)
+        if occursin("=", node.name)
+            push!(declarations, node)
+            
+            # Warn if this variable has children (unexpected metadata)
+            if !isempty(node.children)
+                @warn "Variable '$(split(node.name, "=")[1] |> strip)' has unexpected child nodes. This may indicate non-standard metadata in the taxonomy."
+            end
+        end
+        
+        # Recurse into children regardless
+        for child in node.children
+            append!(declarations, collect_variable_declarations(child))
+        end
+        
+        return declarations
+    end
+    
     # Process Parameters FIRST (so Constants can reference them)
     params_node = find_child_by_name(opennorm_vars, "Parameters")
     if params_node !== nothing
-        for param_node in params_node.children
+        for param_node in collect_variable_declarations(params_node)
             var_name, unit_name = parse_variable_type_annotation(param_node.name)
             if unit_name !== nothing && haskey(UNIT_REGISTRY, unit_name)
                 type_env[var_name] = UNIT_REGISTRY[unit_name]
@@ -222,7 +258,7 @@ function build_type_environment(object_taxonomy::Taxon{Object})
     # Process Constants SECOND (can now reference Parameters)
     constants_node = find_child_by_name(opennorm_vars, "Constants")
     if constants_node !== nothing
-        for const_node in constants_node.children
+        for const_node in collect_variable_declarations(constants_node)
             var_name, unit_name = parse_variable_type_annotation(const_node.name)
             if unit_name !== nothing
                 if haskey(UNIT_REGISTRY, unit_name)
@@ -239,7 +275,7 @@ function build_type_environment(object_taxonomy::Taxon{Object})
     # Process ComputedVariables
     computed_node = find_child_by_name(opennorm_vars, "ComputedVariables")
     if computed_node !== nothing
-        for comp_node in computed_node.children
+        for comp_node in collect_variable_declarations(computed_node)
             var_name, unit_name = parse_variable_type_annotation(comp_node.name)
             if unit_name !== nothing && haskey(UNIT_REGISTRY, unit_name)
                 type_env[var_name] = UNIT_REGISTRY[unit_name]
@@ -275,28 +311,32 @@ function parse_variable_type_annotation(text::String)
     end
     
     # Pattern 2: "VarName = *Unit* ..." (Parameters/ComputedVariables with asterisks)
+    # This also handles Constants that reference other variables with asterisks
     m = match(r"^([^=]+?)\s*=\s*\*([^*]+)\*", text)
     if m !== nothing
         var_name = strip(m.captures[1])
-        unit_name = strip(m.captures[2])
-        return (var_name, unit_name)
+        unit_or_var_name = strip(m.captures[2])
+        return (var_name, unit_or_var_name)
     end
     
     # Pattern 3: "VarName = value Unit" (Constants without asterisks - parser stripped them)
-    # Match known units: EUR, USD, Années, etc.
-    m = match(r"^([^=]+?)\s*=\s*[\d\s,.]+(EUR|USD|Années|Mois|Jours)", text)
+    # Try to match any word after the value that might be a unit
+    m = match(r"^([^=]+?)\s*=\s*[\d\s,.]+([A-Za-zÀ-ÿ]+)", text)
     if m !== nothing
         var_name = strip(m.captures[1])
-        unit_name = strip(m.captures[2])
-        return (var_name, unit_name)
+        potential_unit = strip(m.captures[2])
+        # Only return if it looks like a unit (check if it's in the registry)
+        # This will be validated later when building the type environment
+        return (var_name, potential_unit)
     end
     
     # Pattern 4: "VarName = Unit ..." (Parameters/ComputedVariables without asterisks)
-    m = match(r"^([^=]+?)\s*=\s*(EUR|USD|Années|Mois|Jours)\b", text)
+    # Match any capitalized word that could be a unit
+    m = match(r"^([^=]+?)\s*=\s*([A-Za-zÀ-ÿ]+)\b", text)
     if m !== nothing
         var_name = strip(m.captures[1])
-        unit_name = strip(m.captures[2])
-        return (var_name, unit_name)
+        potential_unit = strip(m.captures[2])
+        return (var_name, potential_unit)
     end
     
     # Pattern 5: "VarName = VariableReference" (Constants referencing other variables, no asterisks)

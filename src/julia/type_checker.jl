@@ -1,230 +1,155 @@
 using Unitful
 
-# Abstract syntax tree nodes for expressions (simplified for type checking)
-abstract type ExprNode end
-
-struct VariableRef <: ExprNode
-    name::String
-end
-
-struct LiteralValue <: ExprNode
-    value::Any
-    unit::Union{Nothing, String}
-end
-
-struct BinaryOp <: ExprNode
-    op::Symbol  # :+, :-, :*, :/
-    left::ExprNode
-    right::ExprNode
-end
-
-struct FunctionCall <: ExprNode
-    func::Symbol  # :min, :max, :sum, :round, etc.
-    args::Vector{ExprNode}
-end
-
-struct CaseExpression <: ExprNode
-    branches::Vector{Tuple{Union{ExprNode, Nothing}, ExprNode}}  # (condition, result) pairs, Nothing for Default
-end
-
-# Exception for dimensional mismatch errors
-struct DimensionalMismatchError <: OpenNormException
-    variable::String
-    declared_type::Unitful.FreeUnits
-    inferred_type::Unitful.FreeUnits
-    expression::String
-    location::String  # Procedure name or location
-end
-
-function Base.showerror(io::IO, e::DimensionalMismatchError)
-    println(io, "\n═══════════════════════════════════════════════════════════════")
-    println(io, "❌ DIMENSIONAL ANALYSIS ERROR")
-    println(io, "═══════════════════════════════════════════════════════════════\n")
-    println(io, "  Variable:      $(e.variable)")
-    println(io, "  Location:      $(e.location)")
-    println(io, "  Declared type: $(e.declared_type)")
-    println(io, "  Inferred type: $(e.inferred_type)")
-    println(io, "\n  Expression: $(e.expression)")
-    println(io, "\n  Problem:")
-    println(io, "    The expression produces $(dimension(e.inferred_type)),")
-    println(io, "    but the variable is declared as $(dimension(e.declared_type)).")
-    println(io, "\n  Suggestion:")
-    
-    # Provide specific suggestions based on the mismatch
-    declared_dim = dimension(e.declared_type)
-    inferred_dim = dimension(e.inferred_type)
-    
-    if inferred_dim == declared_dim^2
-        println(io, "    You are multiplying two quantities with the same dimension.")
-        println(io, "    Either:")
-        println(io, "      1. Use division instead of multiplication")
-        println(io, "      2. Declare $(e.variable) as $(e.inferred_type)")
-    elseif inferred_dim == Unitful.NoDims && declared_dim != Unitful.NoDims
-        println(io, "    The expression is dimensionless (no units).")
-        println(io, "    Either:")
-        println(io, "      1. Multiply by a quantity with dimension $(declared_dim)")
-        println(io, "      2. Declare $(e.variable) as dimensionless")
-    elseif inferred_dim != Unitful.NoDims && declared_dim == Unitful.NoDims
-        println(io, "    The expression has dimension $(inferred_dim).")
-        println(io, "    Either:")
-        println(io, "      1. Divide by a quantity to make it dimensionless")
-        println(io, "      2. Declare $(e.variable) with the correct dimension")
-    else
-        println(io, "    Check the arithmetic operations in your expression.")
-        println(io, "    Ensure the result dimension matches the declared type.")
-    end
-    
-    println(io, "\n═══════════════════════════════════════════════════════════════")
-end
+# Note: ExprNode types are now defined in structures.jl as part of the unified IRNode hierarchy
+# ExprNode <: OperationalNode <: IRNode
+# Note: DimensionalMismatchError is now defined in structures/exceptions.jl
 
 """
     infer_dimension(expr::ExprNode, type_env::Dict{String, Unitful.FreeUnits})
 
 Infer the dimensional type of an expression using Unitful's dimensional analysis.
 Returns a Unitful.FreeUnits representing the result dimension.
+
+This function uses multiple dispatch to handle different expression types.
 """
-function infer_dimension(expr::ExprNode, type_env::Dict{String, Unitful.FreeUnits})
-    if expr isa VariableRef
-        # Look up variable in type environment
-        if haskey(type_env, expr.name)
-            return type_env[expr.name]
+infer_dimension(expr::ExprNode, type_env::Dict{String, Unitful.FreeUnits}) = Unitful.NoUnits
+
+# VariableRef: Look up variable in type environment
+function infer_dimension(expr::VariableRef, type_env::Dict{String, Unitful.FreeUnits})
+    if haskey(type_env, expr.name)
+        return type_env[expr.name]
+    else
+        # Variable not in type environment - assume dimensionless
+        @warn "Variable $(expr.name) not found in type environment, assuming dimensionless"
+        return Unitful.NoUnits
+    end
+end
+
+# LiteralValue: Parse literal with unit
+function infer_dimension(expr::LiteralValue, type_env::Dict{String, Unitful.FreeUnits})
+    if expr.unit !== nothing
+        # Literal has explicit unit: "10 EUR", "5%"
+        if haskey(UNIT_REGISTRY, expr.unit)
+            return UNIT_REGISTRY[expr.unit]
         else
-            # Variable not in type environment - assume dimensionless
-            @warn "Variable $(expr.name) not found in type environment, assuming dimensionless"
+            @warn "Unknown unit $(expr.unit) in literal, assuming dimensionless"
             return Unitful.NoUnits
         end
-        
-    elseif expr isa LiteralValue
-        # Parse literal with unit
-        if expr.unit !== nothing
-            # Literal has explicit unit: "10 EUR", "5%"
-            if haskey(UNIT_REGISTRY, expr.unit)
-                return UNIT_REGISTRY[expr.unit]
-            else
-                @warn "Unknown unit $(expr.unit) in literal, assuming dimensionless"
-                return Unitful.NoUnits
-            end
-        else
-            # Literal without unit is dimensionless
-            return Unitful.NoUnits
-        end
-        
-    elseif expr isa BinaryOp
-        # Infer dimensions of operands
-        left_dim = infer_dimension(expr.left, type_env)
-        right_dim = infer_dimension(expr.right, type_env)
-        
-        # Apply dimensional algebra based on operation
-        if expr.op == :+
-            # Addition requires same dimensions
-            if dimension(left_dim) != dimension(right_dim)
-                error("Cannot add quantities with different dimensions: $(left_dim) + $(right_dim)")
-            end
-            return left_dim
-            
-        elseif expr.op == :-
-            # Subtraction requires same dimensions
-            if dimension(left_dim) != dimension(right_dim)
-                error("Cannot subtract quantities with different dimensions: $(left_dim) - $(right_dim)")
-            end
-            return left_dim
-            
-        elseif expr.op == :*
-            # Multiplication: dimensions multiply
-            # Special case: dimensionless * X = X (for percentages)
-            if dimension(left_dim) == Unitful.NoDims
-                return right_dim
-            elseif dimension(right_dim) == Unitful.NoDims
-                return left_dim
-            else
-                # Both have dimensions - multiply them
-                return left_dim * right_dim
-            end
-            
-        elseif expr.op == :/
-            # Division: dimensions divide
-            if dimension(right_dim) == Unitful.NoDims
-                return left_dim
-            else
-                return left_dim / right_dim
-            end
-        end
-        
-    elseif expr isa FunctionCall
-        # Infer dimensions of arguments
-        arg_dims = [infer_dimension(arg, type_env) for arg in expr.args]
-        
-        # Function-specific rules
-        if expr.func in [:min, :max]
-            # min/max preserve dimension (all args must have same dimension)
-            if length(arg_dims) > 0
-                first_dim = arg_dims[1]
-                for dim in arg_dims[2:end]
-                    if dimension(dim) != dimension(first_dim)
-                        error("$(expr.func) requires all arguments to have the same dimension")
-                    end
-                end
-                return first_dim
-            else
-                return Unitful.NoUnits
-            end
-            
-        elseif expr.func == :sum
-            # sum preserves dimension (all args must have same dimension)
-            if length(arg_dims) > 0
-                first_dim = arg_dims[1]
-                for dim in arg_dims[2:end]
-                    if dimension(dim) != dimension(first_dim)
-                        error("sum requires all arguments to have the same dimension")
-                    end
-                end
-                return first_dim
-            else
-                return Unitful.NoUnits
-            end
-            
-        elseif expr.func in [:round, :ceil, :floor]
-            # Rounding functions preserve dimension
-            if length(arg_dims) > 0
-                return arg_dims[1]
-            else
-                return Unitful.NoUnits
-            end
-        end
-        
-    elseif expr isa CaseExpression
-        # Case expression: all branches must have the same dimension
-        if length(expr.branches) > 0
-            # Collect dimensions from all branches
-            branch_dims = [infer_dimension(result, type_env) for (condition, result) in expr.branches]
-            
-            # Find the first non-dimensionless dimension (if any)
-            # This handles cases where some branches are literal 0 (dimensionless) 
-            # and others have explicit units like "0 EUR"
-            inferred_dim = Unitful.NoUnits
-            for dim in branch_dims
-                if dimension(dim) != Unitful.NoDims
-                    inferred_dim = dim
-                    break
-                end
-            end
-            
-            # Now check all branches are compatible with the inferred dimension
-            for (i, dim) in enumerate(branch_dims)
-                # Allow dimensionless values (like literal 0) to be compatible with any dimension
-                if dimension(dim) != Unitful.NoDims && dimension(dim) != dimension(inferred_dim)
-                    error("Case branch $i has dimension $dim, but expected dimension is $inferred_dim")
-                end
-            end
-            
-            return inferred_dim
-        else
-            return Unitful.NoUnits
-        end
+    else
+        # Literal without unit is dimensionless
+        return Unitful.NoUnits
+    end
+end
+
+# BinaryOp: Apply dimensional algebra based on operation
+function infer_dimension(expr::BinaryOp, type_env::Dict{String, Unitful.FreeUnits})
+    # Infer dimensions of operands
+    left_dim = infer_dimension(expr.left, type_env)
+    right_dim = infer_dimension(expr.right, type_env)
+    
+    # Validate dimension compatibility for operations that require it
+    if expr.op in (:+, :-) && dimension(left_dim) != dimension(right_dim)
+        op_name = expr.op == :+ ? "add" : "subtract"
+        error("Cannot $op_name quantities with different dimensions: $(left_dim) $(expr.op) $(right_dim)")
     end
     
-    # Default: dimensionless
-    return Unitful.NoUnits
+    # Apply dimensional algebra based on operation
+    return apply_dimensional_algebra(Val(expr.op), left_dim, right_dim)
+end
+
+apply_dimensional_algebra(::Val{:+}, left_dim, right_dim) = left_dim
+apply_dimensional_algebra(::Val{:-}, left_dim, right_dim) = left_dim
+
+function apply_dimensional_algebra(::Val{:*}, left_dim, right_dim)
+    # Multiplication: dimensions multiply
+    # Special case: dimensionless * X = X (for percentages)
+    if dimension(left_dim) == Unitful.NoDims
+        return right_dim
+    elseif dimension(right_dim) == Unitful.NoDims
+        return left_dim
+    else
+        # Both have dimensions - multiply them
+        return left_dim * right_dim
+    end
+end
+
+function apply_dimensional_algebra(::Val{:/}, left_dim, right_dim)
+    # Division: dimensions divide
+    if dimension(right_dim) == Unitful.NoDims
+        return left_dim
+    else
+        return left_dim / right_dim
+    end
+end
+
+# UnaryOp: Preserve dimension of operand
+infer_dimension(expr::UnaryOp, type_env::Dict{String, Unitful.FreeUnits}) = infer_dimension(expr.operand, type_env)
+
+
+# FunctionCall: Function-specific dimensional rules
+function infer_dimension(expr::FunctionCall, type_env::Dict{String, Unitful.FreeUnits})
+    # Infer dimensions of arguments
+    arg_dims = [infer_dimension(arg, type_env) for arg in expr.args]
+    
+    # Dispatch based on function name
+    if expr.func in [:min, :max, :sum]
+        # All these functions require same dimensions and preserve dimension
+        return infer_dimension_same_args(expr.func, arg_dims)
+    else
+        # Unknown function - assume dimensionless
+        return Unitful.NoUnits
+    end
+end
+
+# Helper for functions that require all arguments to have the same dimension
+# Used by min, max, sum - all preserve dimension and require dimensional consistency
+function infer_dimension_same_args(func::Symbol, arg_dims::Vector)
+    if length(arg_dims) > 0
+        first_dim = arg_dims[1]
+        # Verify all arguments have the same dimension
+        for dim in arg_dims[2:end]
+            if dimension(dim) != dimension(first_dim)
+                error("$(func) requires all arguments to have the same dimension: got $(first_dim) and $(dim)")
+            end
+        end
+        return first_dim
+    else
+        return Unitful.NoUnits
+    end
+end
+
+# CaseExprNode: All branches must have the same dimension
+function infer_dimension(expr::CaseExprNode, type_env::Dict{String, Unitful.FreeUnits})
+    # Case/CumulativeCase expression: all branches must have the same dimension
+    # Both Case and CumulativeCase have the same dimensional analysis requirements
+    if length(expr.branches) > 0
+        # Collect dimensions from all branches
+        branch_dims = [infer_dimension(result, type_env) for (condition, result) in expr.branches]
+        
+        # Find the first non-dimensionless dimension (if any)
+        # This handles cases where some branches are literal 0 (dimensionless) 
+        # and others have explicit units like "0 EUR"
+        inferred_dim = Unitful.NoUnits
+        for dim in branch_dims
+            if dimension(dim) != Unitful.NoDims
+                inferred_dim = dim
+                break
+            end
+        end
+        
+        # Now check all branches are compatible with the inferred dimension
+        for (i, dim) in enumerate(branch_dims)
+            # Allow dimensionless values (like literal 0) to be compatible with any dimension
+            if dimension(dim) != Unitful.NoDims && dimension(dim) != dimension(inferred_dim)
+                case_type = expr isa CaseExpression ? "Case" : "CumulativeCase"
+                error("$case_type branch $i has dimension $dim, but expected dimension is $inferred_dim")
+            end
+        end
+        
+        return inferred_dim
+    else
+        return Unitful.NoUnits
+    end
 end
 
 """
@@ -267,32 +192,52 @@ end
     expr_to_string(expr::ExprNode)
 
 Convert an expression AST back to a readable string for error messages.
+
+This function uses multiple dispatch to handle different expression types.
 """
 function expr_to_string(expr::ExprNode)
-    if expr isa VariableRef
-        return "*$(expr.name)*"
-    elseif expr isa LiteralValue
-        if expr.unit !== nothing
-            return "$(expr.value) $(expr.unit)"
-        else
-            return string(expr.value)
-        end
-    elseif expr isa BinaryOp
-        left_str = expr_to_string(expr.left)
-        right_str = expr_to_string(expr.right)
-        op_str = if expr.op == :*
-            "×"
-        elseif expr.op == :/
-            "/"
-        else
-            string(expr.op)
-        end
-        return "$(left_str) $(op_str) $(right_str)"
-    elseif expr isa FunctionCall
-        args_str = join([expr_to_string(arg) for arg in expr.args], ", ")
-        return "$(expr.func)($(args_str))"
-    end
+    # Fallback for unknown expression types
     return "<?>"
+end
+
+# VariableRef: Format as *name*
+function expr_to_string(expr::VariableRef)
+    return "*$(expr.name)*"
+end
+
+# LiteralValue: Format with or without unit
+function expr_to_string(expr::LiteralValue)
+    if expr.unit !== nothing
+        return "$(expr.value) $(expr.unit)"
+    else
+        return string(expr.value)
+    end
+end
+
+# BinaryOp: Format as "left op right"
+function expr_to_string(expr::BinaryOp)
+    left_str = expr_to_string(expr.left)
+    right_str = expr_to_string(expr.right)
+    op_str = if expr.op == :*
+        "×"
+    elseif expr.op == :/
+        "/"
+    else
+        string(expr.op)
+    end
+    return "$(left_str) $(op_str) $(right_str)"
+end
+
+# UnaryOp: Format as "op(operand)"
+function expr_to_string(expr::UnaryOp)
+    operand_str = expr_to_string(expr.operand)
+    return "$(expr.op)($(operand_str))"
+end
+
+# FunctionCall: Format as "func(args...)"
+function expr_to_string(expr::FunctionCall)
+    args_str = join([expr_to_string(arg) for arg in expr.args], ", ")
+    return "$(expr.func)($(args_str))"
 end
 
 """
@@ -308,6 +253,14 @@ function parse_expression_for_type_checking(text::Union{String, SubString{String
     # This can happen with continuation lines in multi-line expressions
     if isempty(text)
         return LiteralValue(0, nothing)
+    end
+    
+    # Handle assignment expressions: *Variable* = expression
+    # Strip off the left-hand side and only parse the right-hand side
+    m = match(r"^\*([^*]+)\*\s*=\s*(.+)$", text)
+    if m !== nothing
+        # Only parse the right-hand side (the expression being assigned)
+        text = String(strip(m.captures[2]))
     end
     
     # Try to parse as binary operation
@@ -426,7 +379,13 @@ function parse_expression_for_type_checking(text::Union{String, SubString{String
         end
         
         parsed_args = [parse_expression_for_type_checking(arg) for arg in args]
-        return FunctionCall(func_name, parsed_args)
+        
+        # Check if this is a unary operation (single argument, dimension-preserving function)
+        if length(parsed_args) == 1 && func_name in [:round, :ceil, :floor, :abs, :sqrt]
+            return UnaryOp(func_name, parsed_args[1])
+        else
+            return FunctionCall(func_name, parsed_args)
+        end
     end
     
     # Try to parse as variable reference (in *italics*)
@@ -459,7 +418,7 @@ end
 """
     parse_case_expression(text::String)
 
-Parse a Case or CumulativeCase construct into a CaseExpression AST.
+Parse a Case or CumulativeCase construct into a CaseExpression or CumulativeCaseExpression AST.
 Format:
   Case:
     - condition1:
@@ -476,6 +435,9 @@ function parse_case_expression(text::String)
     if !startswith(text, "Case:") && !startswith(text, "CumulativeCase:")
         error("Expected Case: or CumulativeCase:, got: $(first(text, min(50, length(text))))")
     end
+    
+    # Determine which type to create
+    is_cumulative = startswith(text, "CumulativeCase:")
     
     # Remove the "Case:" or "CumulativeCase:" prefix
     text = replace(text, r"^(Case|CumulativeCase):\s*" => "")
@@ -556,7 +518,12 @@ function parse_case_expression(text::String)
         end
     end
     
-    return CaseExpression(branches)
+    # Return appropriate type based on whether it's cumulative
+    if is_cumulative
+        return CumulativeCaseExpression(branches)
+    else
+        return CaseExpression(branches)
+    end
 end
 
 """
