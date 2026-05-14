@@ -76,6 +76,70 @@ struct UndefinedTermError <: OpenNormException
     norm_text::String  # Full text of the norm for context
 end
 
+# Exception for dimensional mismatch errors in type checking
+struct DimensionalMismatchError <: OpenNormException
+    variable::String
+    declared_type::Any  # Unitful.FreeUnits
+    inferred_type::Any  # Unitful.FreeUnits
+    expression::String
+    location::String  # Procedure name or location
+end
+
+# Custom error display for DimensionalMismatchError
+function Base.showerror(io::IO, e::DimensionalMismatchError)
+    println(io, "\n═══════════════════════════════════════════════════════════════")
+    println(io, "❌ DIMENSIONAL ANALYSIS ERROR")
+    println(io, "═══════════════════════════════════════════════════════════════\n")
+    println(io, "  Variable:      $(e.variable)")
+    println(io, "  Location:      $(e.location)")
+    println(io, "  Declared type: $(e.declared_type)")
+    println(io, "  Inferred type: $(e.inferred_type)")
+    println(io, "\n  Expression: $(e.expression)")
+    println(io, "\n  Problem:")
+    
+    # Import Unitful for dimension checking (will be available when this is used)
+    # Note: We use try-catch to handle the case where Unitful might not be loaded yet
+    try
+        # Access dimension function from Unitful
+        declared_dim = Main.Unitful.dimension(e.declared_type)
+        inferred_dim = Main.Unitful.dimension(e.inferred_type)
+        
+        println(io, "    The expression produces $(inferred_dim),")
+        println(io, "    but the variable is declared as $(declared_dim).")
+        println(io, "\n  Suggestion:")
+        
+        # Provide specific suggestions based on the mismatch
+        if inferred_dim == declared_dim^2
+            println(io, "    You are multiplying two quantities with the same dimension.")
+            println(io, "    Either:")
+            println(io, "      1. Use division instead of multiplication")
+            println(io, "      2. Declare $(e.variable) as $(e.inferred_type)")
+        elseif inferred_dim == Main.Unitful.NoDims && declared_dim != Main.Unitful.NoDims
+            println(io, "    The expression is dimensionless (no units).")
+            println(io, "    Either:")
+            println(io, "      1. Multiply by a quantity with dimension $(declared_dim)")
+            println(io, "      2. Declare $(e.variable) as dimensionless")
+        elseif inferred_dim != Main.Unitful.NoDims && declared_dim == Main.Unitful.NoDims
+            println(io, "    The expression has dimension $(inferred_dim).")
+            println(io, "    Either:")
+            println(io, "      1. Divide by a quantity to make it dimensionless")
+            println(io, "      2. Declare $(e.variable) with the correct dimension")
+        else
+            println(io, "    Check the arithmetic operations in your expression.")
+            println(io, "    Ensure the result dimension matches the declared type.")
+        end
+    catch
+        # Fallback if Unitful is not available
+        println(io, "    The expression produces $(e.inferred_type),")
+        println(io, "    but the variable is declared as $(e.declared_type).")
+        println(io, "\n  Suggestion:")
+        println(io, "    Check the arithmetic operations in your expression.")
+        println(io, "    Ensure the result dimension matches the declared type.")
+    end
+    
+    println(io, "\n═══════════════════════════════════════════════════════════════")
+end
+
 # Custom error display for UndefinedTermError
 function Base.showerror(io::IO, e::UndefinedTermError)
     # TODO: Get language from document context - for now default to English
