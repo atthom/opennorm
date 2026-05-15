@@ -4,88 +4,19 @@ using Z3            # SMT solving (needed by SMT_solver.jl)
 using Unitful       # dimensional analysis (needed by unit_system.jl)
 using YAML          # YAML generation for OpenFisca parameters
 
-# Create Structures module to organize structure definitions
-module Structures
-    using AbstractTrees
-    include(joinpath(@__DIR__, "./structures/exceptions.jl"))
-    include(joinpath(@__DIR__, "./structures/Hohfeldian.jl"))
-    include(joinpath(@__DIR__, "./structures/Taxonomies.jl"))
-    include(joinpath(@__DIR__, "./structures/IntermediateRepresentation.jl"))
-    
-    # Create Taxonomies submodule for taxonomy utilities
-    module Taxonomies
-        using ..Structures: Taxon, TaxonomyEnum
-        export find_child_by_name
-        
-        """Find a direct child of a taxon by name"""
-        function find_child_by_name(taxon::Taxon{T}, name::String) where {T<:TaxonomyEnum}
-            for child in taxon.children
-                if child.name == name
-                    return child
-                end
-            end
-            return nothing
-        end
-    end
-    
-    # Export all necessary types and functions
-    export Manifest, DocumentIR, Norm, Taxon, Procedure, Parameter, InputVariable
-    export Entity, Role, Action, Object, TaxonomyEnum
-    export get_norm_level, get_status, get_lang, get_position, NORMMAP
-    export ImportPathError, CircularDependencyError, DocumentParseError
-    export TaxonomyMergeConflict, UndefinedTermError, OpenNormException
-    export DimensionalMismatchError
-    # Export ExprNode types for type checker
-    export IRNode, OperationalNode, ExprNode
-    export VariableRef, LiteralValue, BinaryOp, UnaryOp, FunctionCall
-    export CaseExprNode, CaseExpression, CumulativeCaseExpression
-    # Export Hohfeldian types
-    export Position
-    # Export concrete entity types for SMT solver
-    export ConcreteEntity, LegalEntity, NonLegalEntity, Binding
-    # Export norm relationship functions for SMT solver
-    export norms_are_related, are_correlative_norms, are_equal_norms, same_norm_relationship
-    # Export taxonomy functions for SMT solver
-    export taxons_are_related
-    # Export Taxonomies submodule
-    export Taxonomies
-end
-
-using .Structures
+# Include structures package (all structure definitions)
+include(joinpath(@__DIR__, "structures/structures.jl"))
 
 include(joinpath(@__DIR__, "unit_system.jl"))
 
-# Create TypeChecker module
-module TypeChecker
-    using ..Structures
-    using Unitful
-    # Import UNIT_REGISTRY from parent module
-    import ..UNIT_REGISTRY
-    include(joinpath(@__DIR__, "type_checker.jl"))
-    export parse_case_expression, parse_expression_for_type_checking
-    export validate_computed_variable, build_type_environment
-    export DimensionalMismatchError
-end
+# Include type checker (needs UNIT_REGISTRY from unit_system.jl)
+include(joinpath(@__DIR__, "type_checker.jl"))
 
-using .TypeChecker
+# Include parser package (all parsing functions)
+include(joinpath(@__DIR__, "parser/parser.jl"))
 
-# Include the parser module
-include(joinpath(@__DIR__, "parser/Parser.jl"))
-# Import with qualified name to avoid conflict with CommonMark.Parser
-import .Parser as OpenNormParser
-# Re-export parser functions at top level
-const parse_document = OpenNormParser.parse_document
-const parse_manifest = OpenNormParser.parse_manifest
-const parse_taxonomy = OpenNormParser.parse_taxonomy
-const parse_norms = OpenNormParser.parse_norms
-const parse_procedures = OpenNormParser.parse_procedures
-const validate_norms_terms = OpenNormParser.validate_norms_terms
-const print_validation_report = OpenNormParser.print_validation_report
-const resolve_import_path = OpenNormParser.resolve_import_path
-
-# Include the CodeGen package (contains both OpenFisca, YAML, and SMT generation)
-include(joinpath(@__DIR__, "codegen/CodeGen.jl"))
-using .CodeGen
+# Include codegen package (unified code generation architecture)
+include(joinpath(@__DIR__, "codegen/codegen.jl"))
 
 # Include SMT solver (depends on CodeGen for translation)
 include(joinpath(@__DIR__, "SMT_solver.jl"))

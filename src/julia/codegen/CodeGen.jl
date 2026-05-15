@@ -1,40 +1,17 @@
-# CodeGen Module
-# Provides code generation functionality for OpenNorm
-# Includes OpenFisca Python generation, YAML parameter generation, and SMT translation
+# CodeGen Package Entry Point
+# Unified code generation architecture for OpenNorm
+# Provides multiple backends: OpenFisca (Python), YAML, SMT2, Report
+# This file includes all codegen files without module wrapping
 
-module CodeGen
+# External dependencies needed by codegen
+using Z3
+using YAML
 
-# Re-export Structures module components needed by submodules
-using ..Structures
-using ..Structures: DocumentIR, Procedure, Parameter, InputVariable, Norm
-using ..Structures: ExprNode, VariableRef, LiteralValue, BinaryOp, UnaryOp, FunctionCall
-using ..Structures: CaseExpression, CumulativeCaseExpression
-using ..Structures: Taxon, Object, TaxonomyEnum
-using ..Structures.Taxonomies
-
-# Include submodules
-include("utils.jl")
-include("openfisca.jl")
-include("yaml.jl")
-include("smt.jl")
-
-# Export main functions from openfisca.jl
-export compile_to_openfisca
-export generate_openfisca_file
-export extract_parameters_from_taxonomy
-
-# Export main functions from yaml.jl
-export generate_yaml_parameters
-export generate_yaml_file
-export extract_constants_from_taxonomy
-
-# Export main functions from smt.jl
-export encode_position
-export encode_taxon
-export add_binding!
-
-# Export shared utilities
-export to_snake_case
-export remove_accents
-
-end # module CodeGen
+# Include codegen subfiles in dependency order
+include("core.jl")          # Backend types and code_gen interface
+include("utils.jl")         # Shared helper functions
+include("expressions.jl")   # Expression translation (OpenFisca)
+include("procedures.jl")    # Procedure/variable generation (OpenFisca, Report)
+include("smt.jl")          # SMT translation (SMT2)
+include("yaml.jl")         # YAML generation (YAML)
+include("compilation.jl")  # Top-level compilation (OpenFisca)

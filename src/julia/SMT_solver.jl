@@ -1,5 +1,5 @@
 using Z3
-using .CodeGen: SMT2Backend, generate, encode_position, encode_taxon, add_binding!
+# CodeGen functions are now in the same scope, no need to import
 
 # Add core Hohfeldian axioms to the solver
 # Returns a list of detected contradictions
@@ -83,11 +83,11 @@ end
 
 function add_norm!(s::Solver, ctx::Context, norm::Norm)
     # Use codegen backend to create a boolean variable for this norm
-    backend = SMT2Backend()
-    holds_var = generate(backend, ctx, norm)
+    backend = SMT2Backend(ctx, s)
+    smt_expr = code_gen(backend, norm)
     
     # Assert that this norm holds (is true)
-    add(s, holds_var)
+    add(s, smt_expr.z3_expr)
     
     # TODO: Add constraints based on Hohfeldian position
     # For example, if this is a Duty, add constraints about the correlative Right
@@ -98,7 +98,7 @@ end
 function to_smt_with_bindings(ir::DocumentIR, bindings::Vector{Binding})::Solver
     ctx = Context()
     s = Solver(ctx)
-    backend = SMT2Backend()
+    backend = SMT2Backend(ctx, s)
     
     # Filter non-skipped norms
     active_norms = filter(n -> !n.skipped, ir.norms)
@@ -111,9 +111,9 @@ function to_smt_with_bindings(ir::DocumentIR, bindings::Vector{Binding})::Solver
         add_norm!(s, ctx, norm)
     end
     
-    # Add concrete bindings using codegen backend
+    # Add concrete bindings using codegen backend helper
     for binding in bindings
-        add_binding!(s, ctx, backend, binding)
+        add_binding_to_solver!(backend, binding)
     end
     
     return s

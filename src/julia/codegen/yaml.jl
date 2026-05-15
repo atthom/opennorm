@@ -1,15 +1,14 @@
-# YAML Parameter File Generation for OpenFisca
+# YAML Parameter File Generation for OpenFisca Backend
 # Generates YAML parameter files from OpenNorm Constants
 
 using YAML
-using ..Structures: DocumentIR, Taxon, Object, TaxonomyEnum
-using ..Structures.Taxonomies: find_child_by_name
 
-# Import shared utilities
-include("utils.jl")
+# ============================================================================
+# CONSTANT EXTRACTION FROM TAXONOMY
+# ============================================================================
 
 """
-Extract Constants from the Object taxonomy
+Extract Constants from the Object taxonomy.
 Returns a vector of tuples: (name, value, unit)
 """
 function extract_constants_from_taxonomy(object_taxonomy::Taxon{Object})
@@ -46,6 +45,10 @@ function extract_constants_from_taxonomy(object_taxonomy::Taxon{Object})
     return constants
 end
 
+# ============================================================================
+# UNIT AND VALUE MAPPING
+# ============================================================================
+
 """Map OpenNorm unit to OpenFisca YAML unit metadata"""
 function map_unit_to_openfisca(unit::String)::String
     unit_category = normalize_unit(unit)
@@ -80,8 +83,24 @@ function parse_numeric_value(value_str::String)
     end
 end
 
-"""Generate OpenFisca YAML parameter file from DocumentIR"""
-function generate_yaml_parameters(ir::DocumentIR)::String
+# ============================================================================
+# YAML GENERATION - YAML BACKEND
+# ============================================================================
+
+"""
+    code_gen(::YAMLBackend, ir::DocumentIR)::String
+
+Generate OpenFisca YAML parameter file from DocumentIR.
+Extracts constants from the taxonomy and formats them as YAML.
+
+# Arguments
+- `backend::YAMLBackend`: The YAML backend instance
+- `ir::DocumentIR`: The document IR containing the taxonomy
+
+# Returns
+- `String`: YAML-formatted parameter file content
+"""
+function code_gen(backend::YAMLBackend, ir::DocumentIR)::String
     # Extract constants from taxonomy
     constants = extract_constants_from_taxonomy(ir.objectTaxonomy)
     
@@ -99,7 +118,6 @@ function generate_yaml_parameters(ir::DocumentIR)::String
     
     # Add each constant as a parameter
     for (name, value, unit) in constants
-        # Use shared to_snake_case function from utils.jl
         param_key = to_snake_case(name)
         numeric_value = parse_numeric_value(value)
         unit_metadata = map_unit_to_openfisca(unit)
@@ -122,7 +140,22 @@ function generate_yaml_parameters(ir::DocumentIR)::String
     return YAML.write(yaml_dict)
 end
 
-"""Generate YAML parameter file and save to disk"""
+# ============================================================================
+# HELPER FUNCTIONS (for backward compatibility)
+# ============================================================================
+
+"""
+Generate YAML parameter file from DocumentIR.
+Wrapper around code_gen for backward compatibility.
+"""
+function generate_yaml_parameters(ir::DocumentIR)::String
+    backend = YAMLBackend()
+    return code_gen(backend, ir)
+end
+
+"""
+Generate YAML parameter file and save to disk.
+"""
 function generate_yaml_file(ir::DocumentIR, output_path::String)
     yaml_content = generate_yaml_parameters(ir)
     
