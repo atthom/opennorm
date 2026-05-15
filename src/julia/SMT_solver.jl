@@ -1,12 +1,5 @@
 using Z3
-
-# Create a unique holds predicate for a norm
-# Returns a Z3 boolean variable representing this normative relationship
-function create_holds_var(ctx::Context, norm::Norm)
-    # Create a unique name for this holds variable
-    var_name = "holds_$(norm.package)_$(norm.ref_id)"
-    return BoolVar(var_name, ctx)
-end
+using .CodeGen: SMT2Backend, generate, encode_position, encode_taxon, add_binding!
 
 # Add core Hohfeldian axioms to the solver
 # Returns a list of detected contradictions
@@ -89,8 +82,9 @@ function to_smt(ir::DocumentIR)
 end
 
 function add_norm!(s::Solver, ctx::Context, norm::Norm)
-    # Create a boolean variable for this norm
-    holds_var = create_holds_var(ctx, norm)
+    # Use codegen backend to create a boolean variable for this norm
+    backend = SMT2Backend()
+    holds_var = generate(backend, ctx, norm)
     
     # Assert that this norm holds (is true)
     add(s, holds_var)
@@ -100,57 +94,26 @@ function add_norm!(s::Solver, ctx::Context, norm::Norm)
     # O_holds axiom — already in core, just reference
 end
 
-# Encode a Hohfeldian Position to SMT
-encode_position(ctx::Context, pos::Position) = position_name(pos)
-
-# Encode any Taxon to SMT using multiple dispatch
-function encode_taxon(ctx::Context, taxon::Taxon{T}) where {T<:TaxonomyEnum}
-    # Encode as the taxon name string
-    return taxon.name
-end
-
-# Encode any ConcreteEntity to SMT using multiple dispatch
-function encode_taxon(ctx::Context, entity::ConcreteEntity)
-    # Encode as a constant with the entity's name
-    return mk_const(ctx, Symbol(entity.name))
-end
-
-# Add a concrete binding to the solver
-function add_binding!(s::Solver, ctx::Context, binding::Binding)
-    # Encode the Hohfeldian position from the norm
-    pos = encode_position(ctx, binding.norm.Hohfeld)
-    
-    # Encode concrete entities using multiple dispatch
-    actor = encode_taxon(ctx, binding.actor)
-    counterparty = encode_taxon(ctx, binding.counterparty)
-    obj = encode_taxon(ctx, binding.object)
-    
-    # Encode action from the norm
-    action = encode_taxon(ctx, binding.norm.action)
-    
-    # Add the concrete binding to the solver
-    # This asserts that the specific entities have this normative relationship
-    add(s, holds(pos, actor, action, obj, counterparty))
-end
-
 # Translate a document with bindings to SMT
 function to_smt_with_bindings(ir::DocumentIR, bindings::Vector{Binding})::Solver
     ctx = Context()
     s = Solver(ctx)
+    backend = SMT2Backend()
+    
+    # Filter non-skipped norms
+    active_norms = filter(n -> !n.skipped, ir.norms)
     
     # Add core axioms
-    add_core_axioms!(s, ctx)
+    add_core_axioms!(s, ctx, active_norms)
     
     # Add abstract norms from the document
-    for norm in ir.norms
-        if !norm.skipped
-            add_norm!(s, ctx, norm)
-        end
+    for norm in active_norms
+        add_norm!(s, ctx, norm)
     end
     
-    # Add concrete bindings
+    # Add concrete bindings using codegen backend
     for binding in bindings
-        add_binding!(s, ctx, binding)
+        add_binding!(s, ctx, backend, binding)
     end
     
     return s

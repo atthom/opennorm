@@ -83,30 +83,12 @@ const validate_norms_terms = OpenNormParser.validate_norms_terms
 const print_validation_report = OpenNormParser.print_validation_report
 const resolve_import_path = OpenNormParser.resolve_import_path
 
-include(joinpath(@__DIR__, "SMT_solver.jl"))
-
-# Create CodeGen module
-module CodeGen
-    using ..Structures
-    include(joinpath(@__DIR__, "code_gen.jl"))
-    export generate, compile_to_openfisca, generate_openfisca_file
-    export OpenFiscaBackend, SMT2Backend, ReportBackend
-    export extract_parameters_from_taxonomy
-end
-
+# Include the CodeGen package (contains both OpenFisca, YAML, and SMT generation)
+include(joinpath(@__DIR__, "codegen/CodeGen.jl"))
 using .CodeGen
 
-# Create YAMLGen module for OpenFisca parameter files
-module YAMLGen
-    using YAML
-    using ..Structures
-    using ..Structures.Taxonomies
-    include(joinpath(@__DIR__, "yaml_gen.jl"))
-    export generate_yaml_parameters, generate_yaml_file
-    export extract_constants_from_taxonomy
-end
-
-using .YAMLGen
+# Include SMT solver (depends on CodeGen for translation)
+include(joinpath(@__DIR__, "SMT_solver.jl"))
 
 # Filter types for taxonomy counting operations
 abstract type TaxonFilter end
