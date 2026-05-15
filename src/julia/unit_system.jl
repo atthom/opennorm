@@ -168,7 +168,7 @@ function register_units!(unit_defs::Vector{UnitDefinition})
                 if unit.alias !== nothing
                     # Has alias - map to Unitful's time dimension
                     UNIT_REGISTRY[unit.name] = uparse(unit.alias)
-                elseif length(unit.dimension_path) > 1 && unit.dimension_path[2] == "Date"
+                elseif unit.name == "Date" || (length(unit.dimension_path) > 1 && unit.dimension_path[2] == "Date")
                     # Date formats are dimensionless
                     UNIT_REGISTRY[unit.name] = Unitful.NoUnits
                 else

@@ -2,6 +2,7 @@ using CommonMark    # markdown parsing (needed by parser module)
 using AbstractTrees # needed by structures.jl
 using Z3            # SMT solving (needed by SMT_solver.jl)
 using Unitful       # dimensional analysis (needed by unit_system.jl)
+using YAML          # YAML generation for OpenFisca parameters
 
 # Create Structures module to organize structure definitions
 module Structures
@@ -10,6 +11,22 @@ module Structures
     include(joinpath(@__DIR__, "./structures/Hohfeldian.jl"))
     include(joinpath(@__DIR__, "./structures/Taxonomies.jl"))
     include(joinpath(@__DIR__, "./structures/IntermediateRepresentation.jl"))
+    
+    # Create Taxonomies submodule for taxonomy utilities
+    module Taxonomies
+        using ..Structures: Taxon, TaxonomyEnum
+        export find_child_by_name
+        
+        """Find a direct child of a taxon by name"""
+        function find_child_by_name(taxon::Taxon{T}, name::String) where {T<:TaxonomyEnum}
+            for child in taxon.children
+                if child.name == name
+                    return child
+                end
+            end
+            return nothing
+        end
+    end
     
     # Export all necessary types and functions
     export Manifest, DocumentIR, Norm, Taxon, Procedure, Parameter, InputVariable
@@ -30,6 +47,8 @@ module Structures
     export norms_are_related, are_correlative_norms, are_equal_norms, same_norm_relationship
     # Export taxonomy functions for SMT solver
     export taxons_are_related
+    # Export Taxonomies submodule
+    export Taxonomies
 end
 
 using .Structures
@@ -72,9 +91,22 @@ module CodeGen
     include(joinpath(@__DIR__, "code_gen.jl"))
     export generate, compile_to_openfisca, generate_openfisca_file
     export OpenFiscaBackend, SMT2Backend, ReportBackend
+    export extract_parameters_from_taxonomy
 end
 
 using .CodeGen
+
+# Create YAMLGen module for OpenFisca parameter files
+module YAMLGen
+    using YAML
+    using ..Structures
+    using ..Structures.Taxonomies
+    include(joinpath(@__DIR__, "yaml_gen.jl"))
+    export generate_yaml_parameters, generate_yaml_file
+    export extract_constants_from_taxonomy
+end
+
+using .YAMLGen
 
 # Filter types for taxonomy counting operations
 abstract type TaxonFilter end
@@ -460,10 +492,14 @@ function opennorm(path::String; openfisca_output::Union{String, Nothing}=nothing
             open(openfisca_output, "w") do f
                 write(f, python_code)
             end
+            
+            # Extract constants from taxonomy to get accurate parameter count
+            constants = extract_constants_from_taxonomy(doc.objectTaxonomy)
+            
             println("✓ OpenFisca code generated successfully")
             println("  Output file: $openfisca_output")
             println("  Procedures: $(length(doc.procedures))")
-            println("  Parameters: $(length(doc.parameters))")
+            println("  Parameters: $(length(constants))")
             println("  Input Variables: $(length(doc.input_variables))")
         catch e
             println("✗ Error generating OpenFisca code:")

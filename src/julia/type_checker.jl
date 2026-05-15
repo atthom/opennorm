@@ -538,12 +538,33 @@ Examples:
 function parse_condition_expression(text::Union{String, SubString{String}})
     text = String(strip(text))
     
-    # For dimensional analysis, we don't need to fully parse conditions
-    # We just need to recognize them as valid expressions
-    # Conditions don't have dimensions themselves (they're boolean)
-    # So we can return a placeholder that won't be used in dimensional analysis
+    # Parse logical AND/OR operators first (lowest precedence)
+    if occursin(" AND ", text)
+        parts = split(text, " AND ", limit=2)
+        left = parse_condition_expression(strip(parts[1]))
+        right = parse_condition_expression(strip(parts[2]))
+        return BinaryOp(:AND, left, right)
+    elseif occursin(" OR ", text)
+        parts = split(text, " OR ", limit=2)
+        left = parse_condition_expression(strip(parts[1]))
+        right = parse_condition_expression(strip(parts[2]))
+        return BinaryOp(:OR, left, right)
+    end
     
-    # For now, just return a simple placeholder
-    # In a full implementation, this would parse comparison and logical operators
-    return LiteralValue(true, nothing)  # Placeholder for condition
+    # Parse comparison operators
+    # Try each comparison operator in order
+    for (op_str, op_sym) in [(" = ", :(==)), (" == ", :(==)), (" != ", :!=), 
+                              (" >= ", :>=), (" <= ", :<=), (" > ", :>), (" < ", :<)]
+        if occursin(op_str, text)
+            parts = split(text, op_str, limit=2)
+            if length(parts) == 2
+                left = parse_expression_for_type_checking(strip(parts[1]))
+                right = parse_expression_for_type_checking(strip(parts[2]))
+                return BinaryOp(op_sym, left, right)
+            end
+        end
+    end
+    
+    # If no operator found, try to parse as a simple expression
+    return parse_expression_for_type_checking(text)
 end
