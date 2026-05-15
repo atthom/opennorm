@@ -139,29 +139,3 @@ function code_gen(backend::YAMLBackend, ir::DocumentIR)::String
     # Convert to YAML string
     return YAML.write(yaml_dict)
 end
-
-# ============================================================================
-# HELPER FUNCTIONS (for backward compatibility)
-# ============================================================================
-
-"""
-Generate YAML parameter file from DocumentIR.
-Wrapper around code_gen for backward compatibility.
-"""
-function generate_yaml_parameters(ir::DocumentIR)::String
-    backend = YAMLBackend()
-    return code_gen(backend, ir)
-end
-
-"""
-Generate YAML parameter file and save to disk.
-"""
-function generate_yaml_file(ir::DocumentIR, output_path::String)
-    yaml_content = generate_yaml_parameters(ir)
-    
-    open(output_path, "w") do f
-        write(f, yaml_content)
-    end
-    
-    return yaml_content
-end

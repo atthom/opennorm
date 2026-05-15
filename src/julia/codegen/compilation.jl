@@ -52,21 +52,20 @@ from openfisca_france.model.base import *
 end
 
 # ============================================================================
-# HELPER FUNCTIONS (for backward compatibility)
+# PUBLIC API
 # ============================================================================
 
 """
-Generate complete OpenFisca Python file from DocumentIR.
-Wrapper around code_gen for backward compatibility.
-"""
-function generate_openfisca_file(ir::DocumentIR)::String
-    backend = OpenFiscaBackend()
-    return code_gen(backend, ir)
-end
+    compile_to_openfisca(ir::DocumentIR)::String
 
-"""
 Main compilation function - generates OpenFisca code.
 Extracts parameters from taxonomy and adds them as input variables.
+
+# Arguments
+- `ir::DocumentIR`: The document IR to compile
+
+# Returns
+- `String`: Complete Python file content with all Variable classes
 """
 function compile_to_openfisca(ir::DocumentIR)::String
     # Extract parameters from taxonomy and add as input variables

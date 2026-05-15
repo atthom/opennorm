@@ -180,48 +180,18 @@ end
 
 Generate OpenFisca Python code for a Norm.
 Currently returns empty string (norms don't generate OpenFisca code).
+# Norms are verified by SMT solver but don't generate OpenFisca code
 """
-function code_gen(backend::OpenFiscaBackend, norm::Norm)::String
-    # Norms are verified by SMT solver but don't generate OpenFisca code
-    return ""
-end
+code_gen(backend::OpenFiscaBackend, norm::Norm) = ""
 
 # ============================================================================
 # REPORT BACKEND (for debugging)
 # ============================================================================
 
-"""
-    code_gen(::ReportBackend, proc::Procedure)::String
+code_gen(backend::ReportBackend, proc::Procedure) = "| `$(proc.name)` | Computed Variable | ✅ Generated |"
+code_gen(backend::ReportBackend, param::Parameter) = "| `$(param.name)` | Parameter | ✅ Generated |"
+code_gen(backend::ReportBackend, var::InputVariable) = "| `$(var.name)` | Input Variable | ✅ Generated |"
 
-Generate a report line for a procedure.
-"""
-function code_gen(backend::ReportBackend, proc::Procedure)::String
-    "| `$(proc.name)` | Computed Variable | ✅ Generated |"
-end
-
-"""
-    code_gen(::ReportBackend, param::Parameter)::String
-
-Generate a report line for a parameter.
-"""
-function code_gen(backend::ReportBackend, param::Parameter)::String
-    "| `$(param.name)` | Parameter | ✅ Generated |"
-end
-
-"""
-    code_gen(::ReportBackend, var::InputVariable)::String
-
-Generate a report line for an input variable.
-"""
-function code_gen(backend::ReportBackend, var::InputVariable)::String
-    "| `$(var.name)` | Input Variable | ✅ Generated |"
-end
-
-"""
-    code_gen(::ReportBackend, norm::Norm)::String
-
-Generate a report line for a norm.
-"""
 function code_gen(backend::ReportBackend, norm::Norm)::String
     status = norm.skipped ? "⚠️ SKIPPED" : "✅ Verified"
     "| `#$(norm.ref_id)` | Norm | $(status) |"

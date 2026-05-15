@@ -131,30 +131,14 @@ function code_gen(backend::SMT2Backend, binding::Binding)::SMTExpr
 end
 
 # ============================================================================
-# HELPER FUNCTIONS FOR SMT SOLVER INTEGRATION
+# HELPER FUNCTIONS
 # ============================================================================
 
 """
 Helper function to add a binding to the solver.
-This bridges between the new code_gen interface and the old SMT_solver API.
+Wraps code_gen to provide a cleaner API for SMT_solver.jl.
 """
 function add_binding_to_solver!(backend::SMT2Backend, binding::Binding)
     constraint_expr = code_gen(backend, binding)
     add(backend.solver, constraint_expr.z3_expr)
-end
-
-"""
-Helper function to encode position (for backward compatibility).
-"""
-function encode_position(backend::SMT2Backend, pos::Position)::String
-    expr = code_gen(backend, pos)
-    return expr.z3_expr
-end
-
-"""
-Helper function to encode taxon (for backward compatibility).
-"""
-function encode_taxon(backend::SMT2Backend, taxon::Union{Taxon, ConcreteEntity})
-    expr = code_gen(backend, taxon)
-    return expr.z3_expr
 end
