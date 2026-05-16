@@ -28,10 +28,13 @@ function code_gen(backend::OpenFiscaBackend, expr::VariableRef)::String
         "abattement_art196_b"
     ]
     
-    # Check if this is a string enum value (common boolean-like values)
-    enum_values = ["oui", "non", "gens_de_maison", "standard", "true", "false"]
-    
-    if var_name in enum_values
+    # Check if this is a boolean value that should be converted to Python bool
+    if var_name in ["oui", "true"]
+        return "True"
+    elseif var_name in ["non", "false"]
+        return "False"
+    # Check if this is a string enum value (non-boolean enums)
+    elseif var_name in ["gens_de_maison", "standard"]
         # This is a string literal that should be quoted
         return "'$var_name'"
     elseif var_name in parameter_names
@@ -70,18 +73,19 @@ function code_gen(backend::OpenFiscaBackend, expr::BinaryOp)::String
     left = code_gen(backend, expr.left)
     right = code_gen(backend, expr.right)
     
-    # Map special operators for OpenFisca
+    # Map special operators for Python
     op_str = if expr.op == :AND
-        "*"  # OpenFisca uses * for AND
+        "and"  # Python boolean AND
     elseif expr.op == :OR
-        "+"  # OpenFisca uses + for OR
+        "or"   # Python boolean OR
     else
         string(expr.op)
     end
     
-    # Only add parentheses for operations that need them (multiplication, division, comparisons)
-    # For addition and subtraction chains, parentheses are not needed
-    needs_parens = expr.op in [:*, :/, :>, :<, :>=, :<=, :(==), :!=, :AND, :OR]
+    # Only add parentheses for operations that need them for precedence
+    # Boolean operators (and, or) have lower precedence than comparisons, so no parens needed
+    # Arithmetic operators need parens for clarity in mixed expressions
+    needs_parens = expr.op in [:*, :/, :>, :<, :>=, :<=, :(==), :!=]
     
     if needs_parens
         return "($left $op_str $right)"
@@ -159,13 +163,26 @@ function code_gen(backend::OpenFiscaBackend, expr::CaseExpression)::String
         return default_value
     end
     
-    # Generate if/elif/else chain
+    # Generate if/elif/else chain with optimization
     lines = String[]
     
-    for (i, (cond, res)) in enumerate(conditional_branches)
+    # Generate code for all branches first to check for redundancy
+    branch_codes = []
+    for (cond, res) in conditional_branches
         cond_py = code_gen(backend, cond)
         res_py = code_gen(backend, res)
-        
+        cond_py = strip_outer_parens(cond_py)
+        push!(branch_codes, (cond_py, res_py))
+    end
+    
+    # Optimize: if last conditional branch has same result as default, remove it
+    if !isempty(branch_codes) && branch_codes[end][2] == default_value
+        # Remove the last branch since it's redundant with default
+        branch_codes = branch_codes[1:end-1]
+    end
+    
+    # Generate the if/elif statements
+    for (i, (cond_py, res_py)) in enumerate(branch_codes)
         if i == 1
             push!(lines, "if $cond_py:")
             push!(lines, "    return $res_py")
@@ -221,6 +238,36 @@ end
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
+
+"""
+Strip unnecessary outer parentheses from a Python expression.
+Only removes the outermost pair if they wrap the entire expression.
+"""
+function strip_outer_parens(expr::String)::String
+    expr = strip(expr)
+    
+    # Check if expression starts and ends with parentheses
+    if !startswith(expr, "(") || !endswith(expr, ")")
+        return expr
+    end
+    
+    # Check if these are matching outer parentheses by counting depth
+    depth = 0
+    for (i, char) in enumerate(expr)
+        if char == '('
+            depth += 1
+        elseif char == ')'
+            depth -= 1
+            # If depth reaches 0 before the end, these aren't outer parens
+            if depth == 0 && i < length(expr)
+                return expr
+            end
+        end
+    end
+    
+    # If we get here, the outer parens wrap the whole expression
+    return strip(expr[2:end-1])
+end
 
 """Check if an expression is a constant boolean value"""
 function is_constant_bool(expr::ExprNode)::Union{Nothing, Bool}

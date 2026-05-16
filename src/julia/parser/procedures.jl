@@ -26,13 +26,16 @@ function parse_procedures(ast::CommonMark.Node, document_path::String="")
             heading_text = strip(plain_with_markers(node))
             
             # Check if we've entered the operational layer
-            if node.t.level == 2 && occursin(r"LAYER 2.*OPERATIONAL"i, heading_text)
+            # Match both English and French patterns (in case translation hasn't happened yet)
+            if node.t.level == 2 && (occursin(r"LAYER 2.*OPERATIONAL"i, heading_text) || 
+                                      occursin(r"COUCHE 2.*OPÉRATIONNELLE"i, heading_text))
                 in_operational_layer = true
                 continue
             end
             
             # Check if we've left the operational layer (entering Layer 3 or beyond)
-            if node.t.level == 2 && occursin(r"LAYER [3-9]"i, heading_text)
+            if node.t.level == 2 && (occursin(r"LAYER [3-9]"i, heading_text) ||
+                                      occursin(r"COUCHE [3-9]"i, heading_text))
                 in_operational_layer = false
                 continue
             end

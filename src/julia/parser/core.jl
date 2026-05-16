@@ -149,7 +149,20 @@ function parse_document(path, project_root=pwd(), import_chain=String[])
     parser = CommonMark.Parser()
     enable!(parser, FootnoteRule())
 
-    ast = parser(read(path, String))
+    # Read the document content
+    content = read(path, String)
+    
+    # Try to detect language from manifest by checking for French keywords
+    # This is a simple heuristic: if we see "Langue:" we know it's French
+    is_french = occursin(r"\*\*Langue:\*\*", content)
+    
+    # If document appears to be in French, translate it first
+    if is_french
+        content = translate_document_if_needed(content, "FR", project_root)
+    end
+    
+    # Now parse the (possibly translated) content
+    ast = parser(content)
     m = parse_manifest(ast)
 
     entities = parse_taxonomy(ast, Entity, m.package)

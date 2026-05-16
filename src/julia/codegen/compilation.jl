@@ -89,7 +89,7 @@ function compile_to_openfisca(ir::DocumentIR)::String
 end
 
 """
-Extract Parameters from the Object taxonomy and convert to InputVariables.
+Extract Parameters and Constants from the Object taxonomy and convert to InputVariables.
 Returns a vector of InputVariable structs.
 """
 function extract_parameters_from_taxonomy(object_taxonomy)::Vector{InputVariable}
@@ -101,27 +101,43 @@ function extract_parameters_from_taxonomy(object_taxonomy)::Vector{InputVariable
         return input_vars
     end
     
-    # Find Parameters node
+    # Extract from Parameters node
     params_node = find_child_by_name(opennorm_vars, "Parameters")
-    if params_node === nothing
-        return input_vars
+    if params_node !== nothing
+        for param_node in params_node.children
+            # Parse "Name = value Unit" or "Name = Unit (required)" format
+            text = param_node.name
+            
+            # Match pattern: "Name = value Unit" or "Name = Unit (required)"
+            m = match(r"^([^=]+?)\s*=\s*(.+?)\s+([A-Za-zÀ-ÿ/]+)(?:\s*\(.*\))?$", text)
+            if m !== nothing
+                name = strip(m.captures[1])
+                unit = strip(m.captures[3])
+                
+                # Create InputVariable (positional arguments, not keyword arguments)
+                input_var = InputVariable(name, unit, nothing)
+                push!(input_vars, input_var)
+            end
+        end
     end
     
-    # Extract each parameter
-    for param_node in params_node.children
-        # Parse "Name = value Unit" format
-        text = param_node.name
-        
-        # Match pattern: "Name = value Unit"
-        m = match(r"^([^=]+?)\s*=\s*(.+?)\s+([A-Za-zÀ-ÿ/]+)$", text)
-        if m !== nothing
-            name = strip(m.captures[1])
-            value = strip(m.captures[2])
-            unit = strip(m.captures[3])
+    # Extract from Constants node
+    constants_node = find_child_by_name(opennorm_vars, "Constants")
+    if constants_node !== nothing
+        for const_node in constants_node.children
+            # Parse "Name = value Unit" format
+            text = const_node.name
             
-            # Create InputVariable (positional arguments, not keyword arguments)
-            input_var = InputVariable(name, unit, nothing)
-            push!(input_vars, input_var)
+            # Match pattern: "Name = value Unit"
+            m = match(r"^([^=]+?)\s*=\s*(.+?)\s+\*([A-Za-zÀ-ÿ/]+)\*$", text)
+            if m !== nothing
+                name = strip(m.captures[1])
+                unit = strip(m.captures[3])
+                
+                # Create InputVariable for constants
+                input_var = InputVariable(name, unit, nothing)
+                push!(input_vars, input_var)
+            end
         end
     end
     

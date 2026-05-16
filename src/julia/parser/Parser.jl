@@ -8,6 +8,7 @@ using CommonMark: Heading, Paragraph, BlockQuote, List, FootnoteRule, Strong, Te
 
 # Include all parser subfiles in dependency order
 include("utils.jl")
+include("translation.jl")
 include("core.jl")
 include("manifest.jl")
 include("taxonomy.jl")
