@@ -3,15 +3,15 @@
 > Version en vigueur depuis le 21 février 2026
 > Encodage OpenNorm - Module: Déficits Agricoles
 
-## Manifest
+## Manifeste
 
 **OpenNorm:** 0.1
-**Package:** cgi.art156.deficits-agricoles
-**Package-type:** regulation
+**Paquet:** cgi.art156.deficits-agricoles
+**Type-paquet:** réglementation
 **Version:** 3.0
-**Status:** review
-**Language:** FR
-**Imports:**
+**Statut:** révision
+**Langue:** FR
+**Importations:**
 
 - stdlib/frameworks/universal/core@2.0
 
@@ -19,7 +19,7 @@
 
 ## Taxonomies
 
-### Role Taxonomy
+### Taxonomie des Rôles
 
 - AnyRole
   - Exploitant
@@ -27,29 +27,30 @@
   - ChefExploitationAgricole
   - AdministrationFiscale
 
-### Action Taxonomy
+### Taxonomie des Actions
 
 - AnyAction
-  - déduire
-  - imputer
-  - reporter
-  - calculer
+  - Fiscal
+    - déduire
+    - imputer
+    - reporter
+    - calculer
 
 ---
 
-## OpenNormTypes
+## TypesOpenNorm
 
-### Object Taxonomy
+### Taxonomie des Objets
 
 - AnyThing
-  - Units
-    - Currency
+  - Unités
+    - Devise
       - EUR
-    - Time
-      - Duration
+    - Temps
+      - Durée
         - Années (alias: yr)
       - Date
-    - Boolean
+    - Booléen
   - Concepts
     - Revenu
       - RevenuBrut
@@ -79,7 +80,7 @@
 
 ---
 
-## LAYER 1: NORMATIVE
+## COUCHE 1 : NORMATIVE
 
 ### I.1° - Déficits agricoles avec seuil de revenus
 
@@ -127,7 +128,7 @@ et *MontantCotisationsGroupe* <= *LimiteArt154bis0A*
 
 ---
 
-## LAYER 2: OPERATIONAL
+## COUCHE 2 : OPÉRATIONNELLE
 
 ### Déficit agricole avec seuil
 

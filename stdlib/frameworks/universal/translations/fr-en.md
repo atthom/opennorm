@@ -71,6 +71,7 @@
 ## Actions
 
 - Action → Action
+- Fiscal → Tax
 - Économique → Economic
 - déclarer → declare
 - payer → pay
@@ -139,3 +140,33 @@
 - Pénalité Fiscale → TaxPenalty
 - Pénalité de Retard → LatePaymentPenalty
 - Pénalité de Sous-Paiement → UnderpaymentPenalty
+
+## OpenNorm DSL Keywords
+
+- Manifeste → Manifest
+- Paquet → Package
+- Type-paquet → Package-type
+- Statut → Status
+- Langue → Language
+- Importations → Imports
+- Taxonomie → Taxonomy
+- Taxonomie des Rôles → Role Taxonomy
+- Taxonomie des Actions → Action Taxonomy
+- Taxonomie des Objets → Object Taxonomy
+- Unités → Units
+- Devise → Currency
+- Durée → Duration
+- Temps → Time
+- Date → Date
+- Booléen → Boolean
+- Constantes → Constants
+- Paramètres → Parameters
+- requis → required
+- VariablesCalculées → ComputedVariables
+- TypesOpenNorm → OpenNormTypes
+- VariablesOpenNorm → OpenNormVariables
+- Couche → Layer
+- OPÉRATIONNELLE → OPERATIONAL
+- NORMATIVE → NORMATIVE
+- révision → review
+- réglementation → regulation

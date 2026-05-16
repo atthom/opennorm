@@ -3,15 +3,15 @@
 > Version en vigueur depuis le 21 février 2026
 > Encodage OpenNorm - Module: Déficits Fonciers
 
-## Manifest
+## Manifeste
 
 **OpenNorm:** 0.1
-**Package:** cgi.art156.deficits-fonciers
-**Package-type:** regulation
+**Paquet:** cgi.art156.deficits-fonciers
+**Type-paquet:** réglementation
 **Version:** 3.0
-**Status:** review
-**Language:** FR
-**Imports:**
+**Statut:** révision
+**Langue:** FR
+**Importations:**
 
 - stdlib/frameworks/universal/core@2.0
 
@@ -19,37 +19,38 @@
 
 ## Taxonomies
 
-### Role Taxonomy
+### Taxonomie des Rôles
 
 - AnyRole
   - Propriétaire
     - PropriétaireMonumentHistorique
   - AdministrationFiscale
 
-### Action Taxonomy
+### Taxonomie des Actions
 
 - AnyAction
-  - imputer
-  - reporter
-  - déduire
-  - reconstituer
+  - Fiscal
+    - imputer
+    - reporter
+    - déduire
+    - reconstituer
 
 ---
 
-## OpenNormTypes
+## TypesOpenNorm
 
-### Object Taxonomy
+### Taxonomie des Objets
 
 - AnyThing
-  - Units
-    - Currency
+  - Unités
+    - Devise
       - EUR
-    - Time
-      - Duration
+    - Temps
+      - Durée
         - Années (alias: yr)
-    - Time
+    - Temps
       - Date
-    - Boolean
+    - Booléen
     - TypePropriétéType (*MonumentHistorique*, *Standard*)
     - ClasseÉnergétiqueType (*A*, *B*, *C*, *D*, *E*, *F*, *G*, *Autre*)
   - Concepts
@@ -71,8 +72,8 @@
       - TypePropriété = *TypePropriétéType*
       - DéficitFoncier = *EUR*
       - DéficitFoncierHorsIntérêts = *EUR*
-      - DéductionsArt31 = *Boolean*
-      - TravauxRénovationÉnergétique = *Boolean*
+      - DéductionsArt31 = *Booléen*
+      - TravauxRénovationÉnergétique = *Booléen*
       - ClasseInitiale = *ClasseÉnergétiqueType*
       - ClasseFinale = *ClasseÉnergétiqueType*
       - MontantTravauxRénovation = *EUR*
@@ -84,7 +85,7 @@
 
 ---
 
-## LAYER 1: NORMATIVE
+## COUCHE 1 : NORMATIVE
 
 ### I.3° - Déficits fonciers avec plafond de 10 700 €
 
@@ -160,7 +161,7 @@ et (*LabelFondationPatrimoine* = *Oui* et *AvisFavorable* = *Oui*)
 
 ---
 
-## LAYER 2: OPERATIONAL
+## COUCHE 2 : OPÉRATIONNELLE
 
 ### Déficit foncier
 

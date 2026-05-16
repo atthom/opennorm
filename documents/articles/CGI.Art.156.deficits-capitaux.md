@@ -3,15 +3,15 @@
 > Version en vigueur depuis le 21 février 2026
 > Encodage OpenNorm - Module: Déficits Capitaux Mobiliers
 
-## Manifest
+## Manifeste
 
 **OpenNorm:** 0.1
-**Package:** cgi.art156.deficits-capitaux
-**Package-type:** regulation
+**Paquet:** cgi.art156.deficits-capitaux
+**Type-paquet:** réglementation
 **Version:** 3.0
-**Status:** review
-**Language:** FR
-**Imports:**
+**Statut:** révision
+**Langue:** FR
+**Importations:**
 
 - stdlib/frameworks/universal/core@2.0
 
@@ -19,30 +19,31 @@
 
 ## Taxonomies
 
-### Role Taxonomy
+### Taxonomie des Rôles
 
 - AnyRole
   - Contribuable
   - AdministrationFiscale
 
-### Action Taxonomy
+### Taxonomie des Actions
 
 - AnyAction
-  - imputer
-  - reporter
+  - Fiscal
+    - imputer
+    - reporter
 
 ---
 
-## OpenNormTypes
+## TypesOpenNorm
 
-### Object Taxonomy
+### Taxonomie des Objets
 
 - AnyThing
-  - Units
-    - Currency
+  - Unités
+    - Devise
       - EUR
-    - Time
-      - Duration
+    - Temps
+      - Durée
         - Années (alias: yr)
   - Concepts
     - Déficit
@@ -59,7 +60,7 @@
 
 ---
 
-## LAYER 1: NORMATIVE
+## COUCHE 1 : NORMATIVE
 
 ### I.8° - Déficits de capitaux mobiliers
 
@@ -78,7 +79,7 @@
 
 ---
 
-## LAYER 2: OPERATIONAL
+## COUCHE 2 : OPÉRATIONNELLE
 
 ### Déficit capitaux mobiliers
 

@@ -3,15 +3,15 @@
 > Version en vigueur depuis le 21 février 2026
 > Encodage OpenNorm - Module: Déficits BIC et Location Meublée
 
-## Manifest
+## Manifeste
 
 **OpenNorm:** 0.1
-**Package:** cgi.art156.deficits-bic
-**Package-type:** regulation
+**Paquet:** cgi.art156.deficits-bic
+**Type-paquet:** réglementation
 **Version:** 3.0
-**Status:** review
-**Language:** FR
-**Imports:**
+**Statut:** révision
+**Langue:** FR
+**Importations:**
 
 - stdlib/frameworks/universal/core@2.0
 
@@ -19,7 +19,7 @@
 
 ## Taxonomies
 
-### Role Taxonomy
+### Taxonomie des Rôles
 
 - AnyRole
   - FoyerFiscal
@@ -30,27 +30,28 @@
       - LoueurMeubléNonProfessionnel
   - AdministrationFiscale
 
-### Action Taxonomy
+### Taxonomie des Actions
 
 - AnyAction
-  - imputer
-  - reporter
-  - déduire
+  - Fiscal
+    - imputer
+    - reporter
+    - déduire
 
 ---
 
-## OpenNormTypes
+## TypesOpenNorm
 
-### Object Taxonomy
+### Taxonomie des Objets
 
 - AnyThing
-  - Units
-    - Currency
+  - Unités
+    - Devise
       - EUR
-    - Time
-      - Duration
+    - Temps
+      - Durée
         - Années (alias: yr)
-    - Boolean
+    - Booléen
     - ParticipationPersonnelleType (*Absente*, *Présente*)
     - StatutLocationType (*NonProfessionnel*, *ProfessionnelDèsDébut*)
   - Concepts
@@ -68,8 +69,8 @@
     - Parameters
       - ParticipationPersonnelle = *ParticipationPersonnelleType*
       - DéficitBIC = *EUR*
-      - LiquidationJudiciaire = *Boolean* default *Oui*
-      - ActifsCédés = *Boolean* default *Non*
+      - LiquidationJudiciaire = *Booléen* default *Oui*
+      - ActifsCédés = *Booléen* default *Non*
       - DéficitBICRestantÀReporter = *EUR*
       - StatutLocation = *StatutLocationType*
       - RevenuLocationMeubléeNonPro = *EUR*
@@ -86,7 +87,7 @@
 
 ---
 
-## LAYER 1: NORMATIVE
+## COUCHE 1 : NORMATIVE
 
 ### I.1° bis - Déficits BIC sans participation personnelle
 
@@ -154,7 +155,7 @@ lorsque *TravailleurIndépendant* a *CotisationsL621_1* ou *TravailleurIndépend
 
 ---
 
-## LAYER 2: OPERATIONAL
+## COUCHE 2 : OPÉRATIONNELLE
 
 ### Déficit BIC sans participation
 

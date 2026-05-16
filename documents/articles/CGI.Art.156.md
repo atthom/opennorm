@@ -3,15 +3,15 @@
 > Version en vigueur depuis le 21 février 2026
 > Encodage OpenNorm - Document Principal
 
-## Manifest
+## Manifeste
 
 **OpenNorm:** 0.1
-**Package:** cgi.art156
-**Package-type:** regulation
+**Paquet:** cgi.art156
+**Type-paquet:** réglementation
 **Version:** 3.0
-**Status:** review
-**Language:** FR
-**Imports:**
+**Statut:** révision
+**Langue:** FR
+**Importations:**
 
 - stdlib/frameworks/universal/core@2.0
 - CGI.Art.156.deficits-agricoles@3.0
@@ -36,7 +36,7 @@ Ce document principal orchestre l'ensemble des modules thématiques qui composen
 
 ## Taxonomies
 
-### Role Taxonomy
+### Taxonomie des Rôles
 
 - AnyRole
   - FoyerFiscal
@@ -53,25 +53,26 @@ Ce document principal orchestre l'ensemble des modules thématiques qui composen
   - TravailleurIndépendant
   - Mutualiste
 
-### Action Taxonomy
+### Taxonomie des Actions
 
 - AnyAction
-  - établir
-  - calculer
-  - déduire
-  - imputer
-  - reporter
+  - Fiscal
+    - établir
+    - calculer
+    - déduire
+    - imputer
+    - reporter
 
 ---
 
-## OpenNormTypes
+## TypesOpenNorm
 
-### Object Taxonomy
+### Taxonomie des Objets
 
 - AnyThing
-  - Units
-    - EUR (Currency)
-    - Années (Duration)
+  - Unités
+    - EUR (Devise)
+    - Années (Durée)
   - Concepts
     - Revenu
       - RevenuGlobal
@@ -90,18 +91,18 @@ Ce document principal orchestre l'ensemble des modules thématiques qui composen
       - CotisationSociale
       - Prime
       - AvantageNature
-  - OpenNormVariables
-    - Constants
+  - VariablesOpenNorm
+    - Constantes
       - DuréeReport = 6 *Années*
-    - Parameters
-      - RevenuGlobal = *EUR* (required)
-    - ComputedVariables
+    - Paramètres
+      - RevenuGlobal = *EUR* (requis)
+    - VariablesCalculées
       - RevenuImposable = *EUR*
       - TotalDéficitsReportables = *EUR*
 
 ---
 
-## LAYER 1: NORMATIVE
+## COUCHE 1 : NORMATIVE
 
 ### Norme principale - Établissement de l'impôt
 
@@ -131,7 +132,7 @@ lorsque *DéficitGénéral* > *RevenuGlobal*
 
 ---
 
-## LAYER 2: OPERATIONAL
+## COUCHE 2 : OPÉRATIONNELLE
 
 ### Calcul du revenu imposable
 
@@ -180,34 +181,34 @@ lorsque *DéficitGénéral* > *RevenuGlobal*
 L'Article 156 est organisé en modules thématiques indépendants:
 
 ### 1. Déficits Agricoles
-**Package:** `cgi.art156.deficits-agricoles@3.0`
+**Paquet:** `cgi.art156.deficits-agricoles@3.0`
 - Déficits agricoles avec seuil de revenus (I.1°)
 - Assurances accidents agricoles (II.11°)
 - Assurances de groupe agricoles (II.13°)
 
 ### 2. Déficits BIC
-**Package:** `cgi.art156.deficits-bic@3.0`
+**Paquet:** `cgi.art156.deficits-bic@3.0`
 - Déficits BIC sans participation personnelle (I.1° bis)
 - Déficits location meublée non professionnelle (I.1° ter)
 - Cotisations travailleurs indépendants (II.10°)
 
 ### 3. Déficits BNC
-**Package:** `cgi.art156.deficits-bnc@3.0`
+**Paquet:** `cgi.art156.deficits-bnc@3.0`
 - Déficits professions non commerciales (I.2°)
 - Règles spécifiques professions libérales
 
 ### 4. Déficits Fonciers
-**Package:** `cgi.art156.deficits-fonciers@3.0`
+**Paquet:** `cgi.art156.deficits-fonciers@3.0`
 - Déficits fonciers avec plafonds (I.3°)
 - Rénovation énergétique
 - Monuments historiques (II.1° ter)
 
 ### 5. Déficits Capitaux Mobiliers
-**Package:** `cgi.art156.deficits-capitaux@3.0`
+**Paquet:** `cgi.art156.deficits-capitaux@3.0`
 - Déficits capitaux mobiliers (I.8°)
 
 ### 6. Charges Déductibles
-**Package:** `cgi.art156.charges-deductibles@3.0`
+**Paquet:** `cgi.art156.charges-deductibles@3.0`
 - Intérêts d'emprunts historiques (II.1°)
 - Pensions alimentaires (II.2°)
 - Avantages en nature personnes âgées (II.2° ter)
@@ -221,9 +222,9 @@ L'Article 156 est organisé en modules thématiques indépendants:
 ### Architecture
 
 Ce document principal sert d'orchestrateur pour l'ensemble des modules de l'Article 156. Chaque module est autonome avec:
-- Son propre manifest
+- Son propre manifeste
 - Ses taxonomies spécifiques
-- Ses normes (Layer 1) et procédures (Layer 2) cohérentes
+- Ses normes (Couche 1) et procédures (Couche 2) cohérentes
 - Sa documentation intégrée
 
 ### Références légales

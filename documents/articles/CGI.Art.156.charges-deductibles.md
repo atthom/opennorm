@@ -3,15 +3,15 @@
 > Version en vigueur depuis le 21 février 2026
 > Encodage OpenNorm - Module: Charges Déductibles
 
-## Manifest
+## Manifeste
 
 **OpenNorm:** 0.1
-**Package:** cgi.art156.charges-deductibles
-**Package-type:** regulation
+**Paquet:** cgi.art156.charges-deductibles
+**Type-paquet:** réglementation
 **Version:** 3.0
-**Status:** review
-**Language:** FR
-**Imports:**
+**Statut:** révision
+**Langue:** FR
+**Importations:**
 
 - stdlib/frameworks/universal/core@2.0
 
@@ -19,7 +19,7 @@
 
 ## Taxonomies
 
-### Role Taxonomy
+### Taxonomie des Rôles
 
 - AnyRole
   - Contribuable
@@ -27,27 +27,28 @@
   - Mutualiste
   - AdministrationFiscale
 
-### Action Taxonomy
+### Taxonomie des Actions
 
 - AnyAction
-  - déduire
+  - Fiscal
+    - déduire
 
 ---
 
-## OpenNormTypes
+## TypesOpenNorm
 
-### Object Taxonomy
+### Taxonomie des Objets
 
 - AnyThing
-  - Units
-    - Currency
+  - Unités
+    - Devise
       - EUR
-    - Time
-      - Duration
+    - Temps
+      - Durée
         - Années (alias: yr)
-    - Time
+    - Temps
       - Date
-    - Boolean
+    - Booléen
     - TypeBénéficiaireType (*DescendantMineur*, *Ascendant*, *Autre*)
     - TypeCotisationType (*GensDeMaison*, *Autre*)
   - Concepts
@@ -63,16 +64,16 @@
       - PlafondAvantagesNature = 4 039 *EUR*
     - Parameters
       - TypeBénéficiaire = *TypeBénéficiaireType*
-      - PrisEnCompteQuotientFamilial = *Boolean*
-      - ApplicationArt199Sexdecies = *Boolean*
+      - PrisEnCompteQuotientFamilial = *Booléen*
+      - ApplicationArt199Sexdecies = *Booléen*
       - MontantPensionAlimentaire = *EUR*
-      - EnfantMarié = *Boolean*
-      - ParticipationSeule = *Boolean*
-      - ImpositionSéparée = *Boolean*
+      - EnfantMarié = *Booléen*
+      - ParticipationSeule = *Booléen*
+      - ImpositionSéparée = *Booléen*
       - MontantContribution = *EUR*
       - VersementsRente = *EUR*
       - ÂgeBénéficiaire = *Années*
-      - VitSousToitContribuable = *Boolean*
+      - VitSousToitContribuable = *Booléen*
       - RevenuImposableBénéficiaire = *EUR*
       - PlafondASPA = *EUR*
       - MontantAvantagesNature = *EUR*
@@ -89,7 +90,7 @@
 
 ---
 
-## LAYER 1: NORMATIVE
+## COUCHE 1 : NORMATIVE
 
 ### II.1° - Intérêts d'emprunts historiques
 
@@ -182,7 +183,7 @@ lorsque *Mutualiste* a *RetraiteMutualisteL222_2*
 
 ---
 
-## LAYER 2: OPERATIONAL
+## COUCHE 2 : OPÉRATIONNELLE
 
 ### Pensions alimentaires
 
