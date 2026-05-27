@@ -11,6 +11,7 @@
 **Version:** 3.0
 **Statut:** révision
 **Langue:** FR
+**Juridiction:** FR.Loi
 **Importations:**
 
 - stdlib/frameworks/universal/core@2.0
@@ -66,27 +67,15 @@
 
 ## COUCHE 1 : NORMATIVE
 
-### I.2° - Déficits de professions non commerciales
+### I.2° - Déficits de professions non commerciales {art156-i-2-deficits-professions-non-commerciales}
 
 > Des déficits provenant d'activités non commerciales, autres que ceux qui proviennent 
 > de l'exercice d'une profession libérale ou des charges et offices dont les titulaires 
 > n'ont pas la qualité de commerçants ; ces déficits peuvent cependant être imputés 
 > sur les bénéfices tirés d'activités semblables durant la même année ou les six années suivantes.
 
-*Contribuable* **ne peut pas** *imputer* le *DéficitBNC* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque non (*TypeActivité* = *ProfessionLibérale* ou *TypeActivité* = *ChargeOffice*)
-{#art156-I-2-interdiction-bnc}
-
-*ProfessionLibérale* **a le droit de** *imputer* le *DéficitBNC* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *TypeActivité* = *ProfessionLibérale*
-sauf #art156-I-2-interdiction-bnc
-{#art156-I-2-exception-profession-libérale}
-
-*Contribuable* **a le droit de** *imputer* le *DéficitBNC* à *AdministrationFiscale* envers *BénéficeBNC*
-{#art156-I-2-imputation-bnc}
-
-*Contribuable* **a le droit de** *reporter* le *DéficitBNC* à *AdministrationFiscale* envers *SixAnnées*
-{#art156-I-2-report-bnc}
+*Contribuable* **a le droit de** *reporter* le *DéficitBNC* envers *AdministrationFiscale*
+exception de art156-norme-principale
 
 ---
 
@@ -132,21 +121,3 @@ Les déficits BNC suivent des règles différentes selon le type d'activité:
 1. **Professions libérales**: Les déficits sont imputables sur le revenu global
 2. **Charges et offices** (titulaires non commerçants): Les déficits sont imputables sur le revenu global
 3. **Autres activités non commerciales**: Les déficits ne sont imputables que sur les bénéfices de même nature
-
-### Paramètres
-
-- *DuréeReportDéficitBNC* = 6 *Années*
-
-### Statut de vérification
-
-- [ ] Vérification SMT (cohérence logique normative)
-- [ ] Vérification exhaustiveness (procédures opérationnelles)
-- [ ] Vérification type checking (unités et types)
-- [ ] Vérification computation graph (pas de cycles)
-
-### Changelog
-
-**Version 3.0 (2026-05-05)**
-- Extraction du module déficits BNC depuis CGI.Art.156.opennorm.md
-- Module autonome avec manifest complet
-- Conservation de la cohérence norms/procédures

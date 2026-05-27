@@ -11,6 +11,7 @@
 **Version:** 3.0
 **Statut:** révision
 **Langue:** FR
+**Juridiction:** FR.Loi
 **Importations:**
 
 - stdlib/frameworks/universal/core@2.0
@@ -62,20 +63,11 @@
 
 ## COUCHE 1 : NORMATIVE
 
-### I.8° - Déficits de capitaux mobiliers
+### I.8° - Déficits de capitaux mobiliers {art156-i-8-deficits-capitaux-mobiliers}
 
 > Des déficits constatés dans la catégorie des revenus des capitaux mobiliers ; 
 > ces déficits peuvent cependant être imputés sur les revenus de même nature 
 > des six années suivantes.
-
-*Contribuable* **ne peut pas** *imputer* le *DéficitCapitauxMobiliers* à *AdministrationFiscale* envers *RevenuGlobal*
-{#art156-I-8-interdiction-capitaux}
-
-*Contribuable* **a le droit de** *imputer* le *DéficitCapitauxMobiliers* à *AdministrationFiscale* envers *RevenuCapitauxMobiliers*
-{#art156-I-8-imputation-capitaux}
-
-*Contribuable* **a le droit de** *reporter* le *DéficitCapitauxMobiliers* à *AdministrationFiscale* envers *SixAnnées*
-{#art156-I-8-report-capitaux}
 
 ---
 
@@ -116,21 +108,3 @@ Les déficits de capitaux mobiliers suivent un régime strict:
 1. **Interdiction d'imputation sur le revenu global**: Ces déficits ne peuvent jamais réduire le revenu global
 2. **Imputation sur revenus de même nature**: Ils s'imputent uniquement sur les revenus de capitaux mobiliers
 3. **Report sur 6 ans**: Les déficits non imputés peuvent être reportés sur les 6 années suivantes
-
-### Paramètres
-
-- *DuréeReportDéficitCapitauxMobiliers* = 6 *Années*
-
-### Statut de vérification
-
-- [ ] Vérification SMT (cohérence logique normative)
-- [ ] Vérification exhaustiveness (procédures opérationnelles)
-- [ ] Vérification type checking (unités et types)
-- [ ] Vérification computation graph (pas de cycles)
-
-### Changelog
-
-**Version 3.0 (2026-05-05)**
-- Extraction du module déficits capitaux mobiliers depuis CGI.Art.156.opennorm.md
-- Module autonome avec manifest complet
-- Conservation de la cohérence norms/procédures

@@ -11,6 +11,7 @@
 **Version:** 3.0
 **Statut:** révision
 **Langue:** FR
+**Juridiction:** FR.Loi
 **Importations:**
 
 - stdlib/frameworks/universal/core@2.0
@@ -87,99 +88,6 @@
       - RenteEnfant = *EUR*
       - AvantagesNatureDéductibles = *EUR*
       - CotisationsSocialesDéductibles = *EUR*
-
----
-
-## COUCHE 1 : NORMATIVE
-
-### II.1° - Intérêts d'emprunts historiques
-
-> Intérêts des emprunts contractés antérieurement au 1er novembre 1959 pour faire 
-> un apport en capital à une entreprise industrielle ou commerciale ou à une exploitation agricole.
-
-*Contribuable* **a le droit de** *déduire* l'*IntérêtEmprunt* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *DateEmprunt* < 01/11/1959
-et (*ApportEntrepriseIndustrielle* = *Oui* ou *ApportEntrepriseCommerciale* = *Oui* ou *ApportExploitationAgricole* = *Oui*)
-{#art156-II-1-intérêts-historiques}
-
-*Rapatrié* **a le droit de** *déduire* l'*IntérêtEmprunt* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *PrêtRéinstallation* = *Oui* ou *PrêtReconversion* = *Oui*
-{#art156-II-1-intérêts-rapatriés}
-
----
-
-### II.2° - Pensions alimentaires
-
-> Pensions alimentaires répondant aux conditions fixées par les articles 205 à 211 
-> du code civil.
-
-*Contribuable* **a le droit de** *déduire* la *PensionAlimentaire* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *Contribuable* a *ObligationAlimentaireArt205_211*
-et non (*TypeBénéficiaire* = *Ascendant* et *ApplicationArt199Sexdecies* = *Oui*)
-{#art156-II-2-pension-alimentaire}
-
-*Contribuable* **ne peut pas** *déduire* la *PensionAlimentaire* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *TypeBénéficiaire* = *DescendantMineur*
-et *PrisEnCompteQuotientFamilial* = *Oui*
-{#art156-II-2-interdiction-descendants-mineurs}
-
-*Contribuable* **a le droit de** *déduire* la *PensionAlimentaire* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque (*VersementArt275* = *Oui* ou *VersementArt276* = *Oui* ou *VersementArt278* = *Oui* ou *VersementArt279_1* = *Oui*)
-et (*SéparationCorps* = *Oui* ou *Divorce* = *Oui*)
-{#art156-II-2-pension-divorce}
-
-*Contribuable* **a le droit de** *déduire* la *PensionAlimentaire* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *ContributionChargesMariageArt214* = *Oui*
-et *ImpositionSéparée* = *Oui*
-{#art156-II-2-contribution-mariage}
-
-*Contribuable* **a le droit de** *déduire* la *PensionAlimentaire* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *RenteArt373_2_3* = *Oui*
-et *VersementsRente* <= *PlafondRenteEnfant*
-{#art156-II-2-rente-enfant}
-
-*Contribuable* **a le droit de** *déduire* la *PensionAlimentaire* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *TypeBénéficiaire* = *EnfantMajeur*
-et *MontantPensionAlimentaire* <= *AbattementArt196B*
-{#art156-II-2-enfant-majeur}
-
----
-
-### II.2° ter - Avantages en nature pour personnes âgées
-
-> Avantages en nature consentis en l'absence d'obligation alimentaire à des personnes 
-> âgées de plus de 75 ans vivant sous le toit du contribuable. La déduction ne peut 
-> excéder 4 039 € par bénéficiaire.
-
-*Contribuable* **a le droit de** *déduire* l'*AvantageNature* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *ÂgeBénéficiaire* > *ÂgeMinimum*
-et *VitSousToitContribuable* = *Oui*
-et non *Contribuable* a *ObligationAlimentaireArt205_211*
-et *RevenuImposableBénéficiaire* < *PlafondASPA*
-et *MontantAvantagesNature* <= *PlafondAvantagesNature*
-{#art156-II-2ter-avantages-nature}
-
----
-
-### II.4° - Cotisations de sécurité sociale
-
-> Versements effectués à titre de cotisations de sécurité sociale, 
-> à l'exception de ceux effectués pour les gens de maison.
-
-*Contribuable* **a le droit de** *déduire* la *CotisationSociale* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque non (*TypeCotisation* = *GensDeMaison*)
-{#art156-II-4-cotisations-sociales}
-
----
-
-### II.5° - Retraite mutualiste du combattant
-
-> Versements effectués en vue de la retraite mutualiste du combattant.
-> Référence: Article L. 222-2 du code de la mutualité
-
-*Mutualiste* **a le droit de** *déduire* la *CotisationSociale* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *Mutualiste* a *RetraiteMutualisteL222_2*
-{#art156-II-5-retraite-mutualiste}
 
 ---
 
@@ -300,25 +208,3 @@ Conditions cumulatives:
 
 #### Cotisations sociales
 Déductibles sauf cotisations pour gens de maison
-
-### Paramètres
-
-- *ÂgeMinimum* = 75 *Années*
-- *PlafondAvantagesNature* = 4 039 *EUR* (révisé annuellement)
-- *PlafondRenteEnfant* = 2 700 *EUR*
-- *PlafondPensionEnfantMajeur* = *AbattementArt196B*
-
-### Statut de vérification
-
-- [ ] Vérification SMT (cohérence logique normative)
-- [ ] Vérification exhaustiveness (procédures opérationnelles)
-- [ ] Vérification type checking (unités et types)
-- [ ] Vérification computation graph (pas de cycles)
-
-### Changelog
-
-**Version 3.0 (2026-05-05)**
-- Extraction du module charges déductibles depuis CGI.Art.156.opennorm.md
-- Module autonome avec manifest complet
-- Conservation de la cohérence norms/procédures
-- Inclusion de toutes les charges déductibles (II.1° à II.5°)

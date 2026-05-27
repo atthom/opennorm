@@ -11,6 +11,7 @@
 **Version:** 3.0
 **Statut:** révision
 **Langue:** FR
+**Juridiction:** FR.Loi
 **Importations:**
 
 - stdlib/frameworks/universal/core@2.0
@@ -82,50 +83,16 @@
 
 ## COUCHE 1 : NORMATIVE
 
-### I.1° - Déficits agricoles avec seuil de revenus
+### I.1° - Déficits agricoles avec seuil de revenus {art156-i-1-deficits-agricoles-seuil}
 
 > N'est pas autorisée l'imputation des déficits provenant d'exploitations agricoles 
 > lorsque le total des revenus nets d'autres sources excède 127 677 € ; 
 > ces déficits peuvent cependant être admis en déduction des bénéfices de même nature 
 > des années suivantes jusqu'à la sixième inclusivement.
 
-*ExploitantAgricole* **ne peut pas** *imputer* le *DéficitAgricole* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *RevenuAutresSources* > *SeuilRevenuAutres*
-{#art156-I-1-interdiction-imputation}
-
-*ExploitantAgricole* **a le droit de** *imputer* le *DéficitAgricole* à *AdministrationFiscale* envers *BénéficeAgricole*
-lorsque *RevenuAutresSources* > *SeuilRevenuAutres*
-{#art156-I-1-imputation-même-nature}
-
-*ExploitantAgricole* **a le droit de** *reporter* le *DéficitAgricole* à *AdministrationFiscale* envers *SixAnnées*
-{#art156-I-1-report-agricole}
-
----
-
-### II.11° - Assurances accidents agricoles
-
-> Les primes ou cotisations des contrats d'assurances conclus en application 
-> des articles L. 752-1 à L. 752-21 du code rural et de la pêche maritime.
-> Référence: Articles L. 752-1 à L. 752-21 CRPM
-
-*ExploitantAgricole* **a le droit de** *déduire* la *Prime* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *ExploitantAgricole* a *ContratAssuranceL752_1_21*
-{#art156-II-11-assurances-agricoles}
-
----
-
-### II.13° - Assurances de groupe agricoles
-
-> Les cotisations versées par les chefs d'exploitation ou d'entreprise agricole 
-> au titre des contrats d'assurance de groupe.
-> Référence: 2° de l'article L. 144-1 du code des assurances
-> Limites: Article 154 bis-0 A
-
-*ChefExploitationAgricole* **a le droit de** *déduire* la *CotisationSociale* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *ChefExploitationAgricole* a *ContratAssuranceGroupeL144_1*
-et *MontantCotisationsGroupe* <= *LimiteArt154bis0A*
-{#art156-II-13-assurances-groupe}
-
+*ExploitantAgricole* **a le droit de** *reporter* le *DéficitAgricole* envers *AdministrationFiscale*
+lorsque *RevenuAutresSources* <= *SeuilRevenuAutres*
+exception de art156-norme-principale
 ---
 
 ## COUCHE 2 : OPÉRATIONNELLE
@@ -188,22 +155,3 @@ Ce module encode les dispositions de l'Article 156 du CGI relatives aux déficit
 - **Code Général des Impôts, Article 154 bis-0 A** - Limites de déduction
 - **Code Rural et de la Pêche Maritime, Articles L. 752-1 à L. 752-21** - Assurances obligatoires
 - **Code des Assurances, Article L. 144-1** - Contrats d'assurance de groupe
-
-### Paramètres
-
-- *SeuilRevenuAutres* = 127 677 *EUR* (révisé annuellement selon première tranche barème IR)
-- *DuréeReportDéficitAgricole* = 6 *Années*
-
-### Statut de vérification
-
-- [ ] Vérification SMT (cohérence logique normative)
-- [ ] Vérification exhaustiveness (procédures opérationnelles)
-- [ ] Vérification type checking (unités et types)
-- [ ] Vérification computation graph (pas de cycles)
-
-### Changelog
-
-**Version 3.0 (2026-05-05)**
-- Extraction du module déficits agricoles depuis CGI.Art.156.opennorm.md
-- Module autonome avec manifest complet
-- Conservation de la cohérence norms/procédures

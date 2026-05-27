@@ -11,6 +11,7 @@
 **Version:** 3.0
 **Statut:** révision
 **Langue:** FR
+**Juridiction:** FR.Loi
 **Importations:**
 
 - stdlib/frameworks/universal/core@2.0
@@ -23,7 +24,6 @@
 
 - AnyRole
   - Propriétaire
-    - PropriétaireMonumentHistorique
   - AdministrationFiscale
 
 ### Taxonomie des Actions
@@ -56,6 +56,7 @@
   - Concepts
     - Revenu
       - RevenuFoncier
+      - RevenuImposable
     - Déficit
       - DéficitFoncier
     - Charge
@@ -87,77 +88,35 @@
 
 ## COUCHE 1 : NORMATIVE
 
-### I.3° - Déficits fonciers avec plafond de 10 700 €
+### I.3° - Déficits fonciers avec plafond de 10 700 € {art156-i-3-deficits-fonciers-plafond-10700-eur}
 
 > Des déficits fonciers, lesquels s'imputent exclusivement sur les revenus fonciers 
 > des dix années suivantes. L'imputation exclusive sur les revenus fonciers n'est pas 
 > applicable aux déficits fonciers résultant de dépenses autres que les intérêts d'emprunt. 
 > L'imputation est limitée à 10 700 €.
 
-*Propriétaire* **ne peut pas** *imputer* le *DéficitFoncier* à *AdministrationFiscale* envers *RevenuGlobal*
-{#art156-I-3-interdiction-foncier-général}
-
-*Propriétaire* **a le droit de** *imputer* le *DéficitFoncier* à *AdministrationFiscale* envers *RevenuFoncier*
-{#art156-I-3-imputation-foncier}
-
-*Propriétaire* **a le droit de** *reporter* le *DéficitFoncier* à *AdministrationFiscale* envers *DixAnnées*
-{#art156-I-3-report-foncier}
-
-*Propriétaire* **a le droit de** *déduire* le *DéficitFoncier* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *DéficitFoncierHorsIntérêts* <= *PlafondDéficitFoncier*
-{#art156-I-3-déduction-limitée}
-
-*Propriétaire* **a le droit de** *déduire* le *DéficitFoncier* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *DéductionsArt31* = *Oui*
-et *DéficitFoncierHorsIntérêts* <= *PlafondDéficitFoncierMajoré*
-sauf #art156-I-3-déduction-limitée
-{#art156-I-3-déduction-plafond-majoré}
-
-*PropriétaireMonumentHistorique* **a le droit de** *déduire* le *DéficitFoncier* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *TypePropriété* = *MonumentHistorique*
-sauf #art156-I-3-déduction-limitée
-{#art156-I-3-monument-historique}
+*Propriétaire* **a le droit de** *reporter* le *DéficitFoncier* envers *AdministrationFiscale*
+exception de art156-norme-principale
 
 ---
 
-### I.3° - Plafond majoré pour rénovation énergétique
+### I.3° - Plafond majoré pour rénovation énergétique {art156-i-3-plafond-majore-renovation-energetique}
 
 > La limite est rehaussée, sans pouvoir excéder 21 400 € par an, à concurrence 
 > du montant des dépenses déductibles de travaux de rénovation énergétique 
 > permettant à un bien de passer d'une classe énergétique E, F ou G à une classe 
 > de performance énergétique A, B, C ou D, au plus tard le 31 décembre 2027.
 
-*Propriétaire* **a le droit de** *déduire* le *DéficitFoncier* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *TravauxRénovationÉnergétique* = *Oui*
-et (*ClasseInitiale* = *E* ou *ClasseInitiale* = *F* ou *ClasseInitiale* = *G*)
-et (*ClasseFinale* = *A* ou *ClasseFinale* = *B* ou *ClasseFinale* = *C* ou *ClasseFinale* = *D*)
-et *DéficitFoncierHorsIntérêts* <= *PlafondRénovationÉnergétique*
-sauf #art156-I-3-déduction-limitée
-{#art156-I-3-rénovation-énergétique}
-
 *Propriétaire* **doit** *reconstituer* le *RevenuImposable* à *AdministrationFiscale*
 lorsque *TravauxRénovationÉnergétique* = *Oui*
 et *Propriétaire* n'a pas *JustificationClassement*
 et *DateCourante* > *DateLimiteJustification*
-{#art156-I-3-reconstitution-défaut}
+exception de art156-i-3-report-foncier
 
 *Propriétaire* **doit** *reconstituer* le *RevenuImposable* à *AdministrationFiscale*
 lorsque *CessationLocation* = *Oui*
 et *DuréeLocation* < 3 *Années*
 et non (*Invalidité* = *Oui* ou *Licenciement* = *Oui* ou *Décès* = *Oui*)
-{#art156-I-3-reconstitution-cessation}
-
----
-
-### II.1° ter - Charges foncières monuments historiques
-
-> Les charges foncières afférentes aux immeubles classés monuments historiques 
-> ou inscrits au titre des monuments historiques.
-
-*PropriétaireMonumentHistorique* **a le droit de** *déduire* la *ChargeFoncière* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque (*ImmeubleClasséMonumentHistorique* = *Oui* ou *ImmeubleInscritMonumentHistorique* = *Oui*)
-et (*LabelFondationPatrimoine* = *Oui* et *AvisFavorable* = *Oui*)
-{#art156-II-1ter-charges-monuments}
 
 ---
 
@@ -228,25 +187,3 @@ Le contribuable doit reconstituer le revenu imposable si:
 - Absence de justification du nouveau classement énergétique avant le 31/12/2027
 - Cessation de location dans les 3 ans (sauf invalidité, licenciement, décès)
 
-### Paramètres
-
-- *PlafondDéficitFoncier* = 10 700 *EUR*
-- *PlafondDéficitFoncierMajoré* = 15 300 *EUR*
-- *PlafondRénovationÉnergétique* = 21 400 *EUR*
-- *DuréeReportDéficitFoncier* = 10 *Années*
-- *DateLimiteRénovationÉnergétique* = 31/12/2027
-
-### Statut de vérification
-
-- [ ] Vérification SMT (cohérence logique normative)
-- [ ] Vérification exhaustiveness (procédures opérationnelles)
-- [ ] Vérification type checking (unités et types)
-- [ ] Vérification computation graph (pas de cycles)
-
-### Changelog
-
-**Version 3.0 (2026-05-05)**
-- Extraction du module déficits fonciers depuis CGI.Art.156.opennorm.md
-- Module autonome avec manifest complet
-- Conservation de la cohérence norms/procédures
-- Inclusion des règles de rénovation énergétique et monuments historiques

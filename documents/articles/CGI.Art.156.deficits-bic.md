@@ -11,6 +11,7 @@
 **Version:** 3.0
 **Statut:** révision
 **Langue:** FR
+**Juridiction:** FR.Loi
 **Importations:**
 
 - stdlib/frameworks/universal/core@2.0
@@ -22,13 +23,13 @@
 ### Taxonomie des Rôles
 
 - AnyRole
-  - FoyerFiscal
-  - TravailleurIndépendant
+  - Foyer Fiscal
+  - Travailleur Indépendant
   - Loueur
-    - LoueurMeublé
-      - LoueurMeubléProfessionnel
-      - LoueurMeubléNonProfessionnel
-  - AdministrationFiscale
+    - Loueur Meublé
+      - Loueur Meublé Professionnel
+      - Loueur Meublé Non Professionnel
+  - Administration Fiscale
 
 ### Taxonomie des Actions
 
@@ -56,164 +57,122 @@
     - StatutLocationType (*NonProfessionnel*, *ProfessionnelDèsDébut*)
   - Concepts
     - Revenu
-      - RevenuBrut
+      - Revenu Brut
     - Déficit
-      - DéficitBIC
+      - Déficit BIC
     - Charge
-      - CotisationSociale
+      - Cotisation Sociale
   - OpenNormVariables
     - Constants
-      - DuréeReport = 6 *Années*
-      - DuréeReportLMNP = 10 *Années*
-      - NombreAnnéesImputation = 3 *Années*
+      - Durée Report = 6 *Années*
+      - Durée Report LMNP = 10 *Années*
+      - Nombre Années Imputation = 3 *Années*
     - Parameters
-      - ParticipationPersonnelle = *ParticipationPersonnelleType*
-      - DéficitBIC = *EUR*
-      - LiquidationJudiciaire = *Booléen* default *Oui*
-      - ActifsCédés = *Booléen* default *Non*
-      - DéficitBICRestantÀReporter = *EUR*
-      - StatutLocation = *StatutLocationType*
-      - RevenuLocationMeubléeNonPro = *EUR*
-      - AnnéeLocation = *Années*
-      - ChargesAvantCommencement = *EUR*
-      - MontantCotisationsL621_1 = *EUR*
-      - MontantCotisationsL622_2 = *EUR*
+      - Participation Personnelle = *ParticipationPersonnelleType*
+      - Déficit BIC = *EUR*
+      - Liquidation Judiciaire = *Booléen* default *Oui*
+      - Actifs Cédés = *Booléen* default *Non*
+      - Déficit BIC Restant À Reporter = *EUR*
+      - Statut Location = *StatutLocationType*
+      - Revenu Location Meublée Non Pro = *EUR*
+      - Année Location = *Années*
+      - Charges Avant Commencement = *EUR*
+      - Montant Cotisations L621_1 = *EUR*
+      - Montant Cotisations L622_2 = *EUR*
     - ComputedVariables
-      - DéficitBICImputable = *EUR*
-      - DéficitBICLiquidationJudiciaire = *EUR*
-      - DéficitLMNPImputable = *EUR*
-      - DéficitLMNPProfessionnelDébutant = *EUR*
-      - CotisationsTravailleursIndépendants = *EUR*
+      - Déficit BIC Imputable = *EUR*
+      - Déficit BIC Liquidation Judiciaire = *EUR*
+      - Déficit LMNP Imputable = *EUR*
+      - Déficit LMNP Professionnel Débutant = *EUR*
+      - Cotisations Travailleurs Indépendants = *EUR*
 
 ---
 
 ## COUCHE 1 : NORMATIVE
 
-### I.1° bis - Déficits BIC sans participation personnelle
+### I.1° bis - Déficits BIC sans participation personnelle {art156-i-1bis-deficits-bic-sans-participation}
 
 > N'est pas autorisée l'imputation des déficits provenant, directement ou indirectement, 
 > des activités relevant des bénéfices industriels ou commerciaux lorsque ces activités 
 > ne comportent pas la participation personnelle, continue et directe de l'un des membres 
 > du foyer fiscal.
 
-*FoyerFiscal* **ne peut pas** *imputer* le *DéficitBIC* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *ParticipationPersonnelle* = *Absente*
-{#art156-I-1bis-interdiction-bic}
-
-*FoyerFiscal* **a le droit de** *imputer* le *DéficitBIC* à *AdministrationFiscale* envers *BénéficeBIC*
-lorsque *ParticipationPersonnelle* = *Absente*
-{#art156-I-1bis-imputation-même-nature}
-
-*FoyerFiscal* **a le droit de** *reporter* le *DéficitBIC* à *AdministrationFiscale* envers *SixAnnées*
-lorsque *ParticipationPersonnelle* = *Absente*
-{#art156-I-1bis-report-bic}
-
-*FoyerFiscal* **a le droit de** *imputer* le *DéficitBIC* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *LiquidationJudiciaire* = *Oui*
-et *ActifsCédés* = *Oui*
-sauf #art156-I-1bis-interdiction-bic
-{#art156-I-1bis-exception-liquidation}
-
+Le *Foyer Fiscal* **a le droit de** *reporter* le *Déficit BIC* envers l'*Administration Fiscale*
+lorsque sa *Participation Personnelle* = *Absente*
+exception de art156-norme-principale
 ---
 
-### I.1° ter - Déficits de location meublée non professionnelle
+### I.1° ter - Déficits de location meublée non professionnelle {art156-i-1ter-deficits-location-meublee-non-pro}
 
 > Des déficits du foyer fiscal provenant de l'activité de location directe ou indirecte 
 > de locaux d'habitation meublés ou destinés à être loués meublés lorsque l'activité 
 > n'est pas exercée à titre professionnel. Ces déficits s'imputent exclusivement 
 > sur les revenus provenant d'une telle activité au cours de celles des dix années suivantes.
 
-*LoueurMeubléNonProfessionnel* **ne peut pas** *imputer* le *DéficitBIC* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *StatutLocation* = *NonProfessionnel*
-{#art156-I-1ter-interdiction-lmnp}
-
-*LoueurMeubléNonProfessionnel* **a le droit de** *imputer* le *DéficitBIC* à *AdministrationFiscale* envers *RevenuLocationMeublée*
-lorsque *StatutLocation* = *NonProfessionnel*
-{#art156-I-1ter-imputation-lmnp}
-
-*LoueurMeubléNonProfessionnel* **a le droit de** *reporter* le *DéficitBIC* à *AdministrationFiscale* envers *DixAnnées*
-lorsque *StatutLocation* = *NonProfessionnel*
-{#art156-I-1ter-report-lmnp}
-
-*LoueurMeubléProfessionnel* **a le droit de** *imputer* les *ChargesAvantCommencement* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *StatutLocation* = *ProfessionnelDèsDébut*
-et *AnnéeLocation* <= *NombreAnnéesImputation*
-sauf #art156-I-1ter-interdiction-lmnp
-{#art156-I-1ter-exception-professionnel}
-
----
-
-### II.10° - Cotisations des travailleurs indépendants
-
-> Les cotisations mentionnées aux articles L. 621-1 et L. 622-2 
-> du code de la sécurité sociale.
-> Référence: Articles L. 621-1 et L. 622-2 CSS
-
-*TravailleurIndépendant* **a le droit de** *déduire* la *CotisationSociale* à *AdministrationFiscale* envers *RevenuGlobal*
-lorsque *TravailleurIndépendant* a *CotisationsL621_1* ou *TravailleurIndépendant* a *CotisationsL622_2*
-{#art156-II-10-cotisations-indépendants}
-
+Le *Loueur Meublé Non Professionnel* **a le droit de** *reporter* le *Déficit BIC* envers l'*Administration Fiscale*
+lorsque son *Statut Location* = *Non Professionnel*
+exception de art156-norme-principale
 ---
 
 ## COUCHE 2 : OPÉRATIONNELLE
 
 ### Déficit BIC sans participation
 
-## *DéficitBICImputable*
+## *Déficit BIC Imputable*
 
 > Déficit BIC imputable selon la participation personnelle du foyer fiscal
 
 Case:
-  - *ParticipationPersonnelle* = *Absente*:
+  - *Participation Personnelle* = *Absente*:
       0 EUR
-  - *ParticipationPersonnelle* = *Présente*:
-      *DéficitBIC*
+  - *Participation Personnelle* = *Présente*:
+      *Déficit BIC*
   - Default: 0 EUR
 
 ---
 
-## *DéficitBICLiquidationJudiciaire*
+## *Déficit BIC Liquidation Judiciaire*
 
 > Exception liquidation judiciaire - déficit BIC imputable sur revenu global
 
 Case:
-  - *LiquidationJudiciaire* = *Oui* AND *ActifsCédés* = *Oui*:
-      *DéficitBICRestantÀReporter*
+  - *Liquidation Judiciaire* = *Oui* AND *Actifs Cédés* = *Oui*:
+      *Déficit BIC Restant À Reporter*
   - Default: 0 EUR
 
 ---
 
 ### Déficit LMNP
 
-## *DéficitLMNPImputable*
+## *Déficit LMNP Imputable*
 
 > Déficit de location meublée non professionnelle imputable
 
 Case:
-  - *StatutLocation* = *NonProfessionnel*:
-      min(*DéficitBIC*, *RevenuLocationMeubléeNonPro*)
+  - *Statut Location* = *Non Professionnel*:
+      min(*Déficit BIC*, *Revenu Location Meublée Non Pro*)
   - Default: 0 EUR
 
 ---
 
-## *DéficitLMNPProfessionnelDébutant*
+## *Déficit LMNP Professionnel Débutant*
 
 > Imputation par tiers des charges avant commencement pour activité professionnelle dès le début
 
 Case:
-  - *StatutLocation* = *ProfessionnelDèsDébut* AND *AnnéeLocation* <= *NombreAnnéesImputation*:
-      *ChargesAvantCommencement* / 3
+  - *Statut Location* = *Professionnel Dès Début* AND *Année Location* <= *Nombre Années Imputation*:
+      *Charges Avant Commencement* / 3
   - Default: 0 EUR
 
 ---
 
 ### Cotisations travailleurs indépendants
 
-## *CotisationsTravailleursIndépendants*
+## *Cotisations Travailleurs Indépendants*
 
 > Cotisations des travailleurs indépendants (articles L. 621-1 et L. 622-2 CSS)
 
-*CotisationsTravailleursIndépendants* = *MontantCotisationsL621_1* + *MontantCotisationsL622_2*
+*Cotisations Travailleurs Indépendants* = *Montant Cotisations L621_1* + *Montant Cotisations L622_2*
 
 ---
 
@@ -230,24 +189,3 @@ Ce module encode les dispositions de l'Article 156 du CGI relatives aux déficit
 - **Code Général des Impôts, Article 156, II.10°** - Cotisations travailleurs indépendants
 - **Code Général des Impôts, Article 155** - Statut professionnel location meublée
 - **Code de la Sécurité Sociale, Articles L. 621-1 et L. 622-2** - Cotisations obligatoires
-
-### Paramètres
-
-- *DuréeReportDéficitBIC* = 6 *Années*
-- *DuréeReportDéficitLMNP* = 10 *Années*
-- *NombreAnnéesImputation* = 3 *Années* (pour LMNP professionnel dès le début)
-
-### Statut de vérification
-
-- [ ] Vérification SMT (cohérence logique normative)
-- [ ] Vérification exhaustiveness (procédures opérationnelles)
-- [ ] Vérification type checking (unités et types)
-- [ ] Vérification computation graph (pas de cycles)
-
-### Changelog
-
-**Version 3.0 (2026-05-05)**
-- Extraction du module déficits BIC depuis CGI.Art.156.opennorm.md
-- Module autonome avec manifest complet
-- Conservation de la cohérence norms/procédures
-- Inclusion des règles LMNP et cotisations travailleurs indépendants

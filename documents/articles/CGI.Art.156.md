@@ -11,6 +11,7 @@
 **Version:** 3.0
 **Statut:** révision
 **Langue:** FR
+**Juridiction:** FR.Loi
 **Importations:**
 
 - stdlib/frameworks/universal/core@2.0
@@ -104,17 +105,17 @@ Ce document principal orchestre l'ensemble des modules thématiques qui composen
 
 ## COUCHE 1 : NORMATIVE
 
-### Norme principale - Établissement de l'impôt
+### Norme principale - Établissement de l'impôt {art156-norme-principale}
 
 > L'impôt sur le revenu est établi d'après le montant total du revenu net annuel 
 > dont dispose chaque foyer fiscal.
 
 *FoyerFiscal* **a le droit de** *établir* le *RevenuImposable* à *AdministrationFiscale*
-{#art156-base}
+exception de grundnorm
 
 ---
 
-### I. Déductions de déficits
+### I. Déductions de déficits {art156-i-deductions-deficits}
 
 #### Déficit général - Report sur 6 ans
 
@@ -123,12 +124,8 @@ Ce document principal orchestre l'ensemble des modules thématiques qui composen
 > intégralement opérée, l'excédent du déficit est reporté successivement 
 > sur le revenu global des années suivantes jusqu'à la sixième année inclusivement.
 
-*FoyerFiscal* **a le droit de** *imputer* le *DéficitGénéral* à *AdministrationFiscale* envers *RevenuGlobal*
-{#art156-I-déficit-général}
-
-*FoyerFiscal* **a le droit de** *reporter* le *DéficitGénéral* à *AdministrationFiscale* envers *SixAnnées*
+*FoyerFiscal* **a le droit de** *reporter* le *DéficitGénéral* envers *AdministrationFiscale*
 lorsque *DéficitGénéral* > *RevenuGlobal*
-{#art156-I-report-6ans}
 
 ---
 
