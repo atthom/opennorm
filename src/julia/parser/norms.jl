@@ -6,14 +6,19 @@
 const NORM_TEXTS = Dict{String, String}()
 
 """
-    parse_norms(ast, package_name)
+    parse_norms(ast, package_name, jurisdiction=nothing)
 
 Parse all norms from the AST.
 Uses a two-pass approach:
 1. First pass: parse all non-exception norms
 2. Second pass: parse exception norms (which can reference norms from first pass)
+
+# Arguments
+- `ast`: The AST to parse
+- `package_name`: The package name for the norms
+- `jurisdiction`: Optional jurisdiction from manifest to assign to all norms
 """
-function parse_norms(ast, package_name)
+function parse_norms(ast, package_name, jurisdiction=nothing)
     norms = Norm[]
     current_annotations = String[]
     
@@ -46,7 +51,7 @@ function parse_norms(ast, package_name)
     # Parse all norms, handling exceptions in a second pass if needed
     exception_nodes = []
     for (node, title, annotations) in norm_nodes
-        norm = parse_norm(ast, node, title, annotations, package_name, norms)
+        norm = parse_norm(ast, node, title, annotations, package_name, norms, jurisdiction)
         if norm !== nothing
             # Check if this is an exception that couldn't be parsed yet
             if norm isa Tuple && norm[1] == :deferred_exception
@@ -59,7 +64,7 @@ function parse_norms(ast, package_name)
     
     # Second pass: parse any deferred exceptions
     for (node, title, annotations, norm_text) in exception_nodes
-        norm = parse_norm(ast, node, title, annotations, package_name, norms)
+        norm = parse_norm(ast, node, title, annotations, package_name, norms, jurisdiction)
         if norm !== nothing && !(norm isa Tuple)
             push!(norms, norm)
         end
@@ -92,11 +97,11 @@ function extract_annotations(blockquote_node)
 end
 
 """
-    parse_norm(ast, header_node, title, annotations, package_name, norms)
+    parse_norm(ast, header_node, title, annotations, package_name, norms, jurisdiction=nothing)
 
 Parse a single norm starting from its H3 header.
 """
-function parse_norm(ast, header_node, title, annotations, package_name, norms)
+function parse_norm(ast, header_node, title, annotations, package_name, norms, jurisdiction=nothing)
     # Extract explicit ref_id if present in the title (format: {ref-id})
     # Otherwise generate ref_id from title
     ref_id_match = match(r"\{([\w-]+)\}", title)
@@ -152,7 +157,7 @@ function parse_norm(ast, header_node, title, annotations, package_name, norms)
             # Check if this looks like a norm (contains * and ** or exception syntax)
             if occursin(r"\*[^*]+\*\s+\*\*[^*]+\*\*", norm_text) || occursin(r"exception\s+de\s+", norm_text)
                 # Parse the norm body
-                return parse_norm_body(ref_id, norm_text, skipped, overrules, package_name, norms)
+                return parse_norm_body(ref_id, norm_text, skipped, overrules, package_name, norms, jurisdiction)
             end
         end
         
@@ -166,11 +171,11 @@ function parse_norm(ast, header_node, title, annotations, package_name, norms)
 end
 
 """
-    parse_norm_body(ref_id, norm_text, skipped, overrules, package_name, norms)
+    parse_norm_body(ref_id, norm_text, skipped, overrules, package_name, norms, jurisdiction=nothing)
 
 Parse the norm body text. Handles both regular norms and exceptions.
 """
-function parse_norm_body(ref_id, norm_text, skipped, overrules, package_name, norms)
+function parse_norm_body(ref_id, norm_text, skipped, overrules, package_name, norms, jurisdiction=nothing)
     # Store the norm text for error reporting
     NORM_TEXTS[ref_id] = norm_text
     
@@ -199,10 +204,10 @@ function parse_norm_body(ref_id, norm_text, skipped, overrules, package_name, no
         
         if has_full_syntax
             # Full syntax: parse and validate against parent
-            return parse_full_exception(ref_id, normalized_text, parent_norm, skipped, overrules, package_name)
+            return parse_full_exception(ref_id, normalized_text, parent_norm, skipped, overrules, package_name, jurisdiction)
         else
-            # Minimal syntax: use constructor
-            return Norm(parent_norm, ref_id, text=norm_text)
+            # Minimal syntax: use constructor (jurisdiction inherited from parent)
+            return Norm(parent_norm, ref_id, text=norm_text, jurisdiction=jurisdiction)
         end
     end
     
@@ -253,20 +258,26 @@ function parse_norm_body(ref_id, norm_text, skipped, overrules, package_name, no
         return nothing
     end
     
-    # For now, create simple taxons (will need proper taxonomy resolution)
-    actor = Taxon(Role, actor_name)
-    counterparty = Taxon(Role, counterparty_name)
+    # Normalize names for taxonomy lookup while preserving display names
+    actor_key = normalize_taxon_name(actor_name)
+    counterparty_key = normalize_taxon_name(counterparty_name)
+    object_key = normalize_taxon_name(object_name)
+    
+    # Create taxons with both normalized key and display name
+    actor = Taxon{Role}(name=actor_key, display_name=actor_name)
+    counterparty = Taxon{Role}(name=counterparty_key, display_name=counterparty_name)
     
     # Parse actions (comma-separated)
     actions = parse_actions(actions_text)
     action = if !isempty(actions)
-        Taxon(Action, actions[1])  # Use first action for now
+        action_key = normalize_taxon_name(actions[1])
+        Taxon{Action}(name=action_key, display_name=actions[1])
     else
-        Taxon(Action, "")
+        Taxon{Action}(name="", display_name="")
     end
     
     # Parse object
-    object = Taxon(Object, object_name)
+    object = Taxon{Object}(name=object_key, display_name=object_name)
     
     # Create the norm
     norm = Norm(
@@ -279,7 +290,8 @@ function parse_norm_body(ref_id, norm_text, skipped, overrules, package_name, no
         counterparty=counterparty,
         overrules=overrules,
         skipped=skipped,
-        text=norm_text
+        text=norm_text,
+        jurisdiction=jurisdiction
     )
     
     # Validate bilateral constraint
@@ -334,12 +346,12 @@ function find_norm_by_ref(norms::Vector{Norm}, ref_id::String)
 end
 
 """
-    parse_full_exception(ref_id, norm_text, parent_norm, skipped, overrules, package_name)
+    parse_full_exception(ref_id, norm_text, parent_norm, skipped, overrules, package_name, jurisdiction=nothing)
 
 Parse an exception with full syntax (explicit actor/action/object/counterparty).
 Validates that the explicit fields match the parent norm.
 """
-function parse_full_exception(ref_id, norm_text, parent_norm, skipped, overrules, package_name)
+function parse_full_exception(ref_id, norm_text, parent_norm, skipped, overrules, package_name, jurisdiction=nothing)
     # Normalize whitespace
     normalized_text = replace(norm_text, r"\s+" => " ")
     
@@ -419,6 +431,7 @@ function parse_full_exception(ref_id, norm_text, parent_norm, skipped, overrules
         excepts=parent_norm.ref_id,  # Link to parent
         depth=parent_norm.depth + 1,  # Increment depth
         skipped=skipped,
-        text=norm_text
+        text=norm_text,
+        jurisdiction=jurisdiction
     )
 end

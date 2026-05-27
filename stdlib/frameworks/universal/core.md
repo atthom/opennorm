@@ -39,6 +39,7 @@
 ### Role Taxonomy
 
 - AnyRole
+  - AnyOne
   - LicensingRole
     - RightsHolder
     - Licensor
@@ -118,6 +119,7 @@
     - Money
   - Digital
     - Software
+    - the Software
     - Data
     - Documents
   - Normative
@@ -126,6 +128,7 @@
     - Capacities
   - Legal
     - Copyright Notice
+    - the Notice
     - License
     - Patent
     - Trademark
@@ -134,6 +137,35 @@
     - Backend
     - Frontend
     - Database
+
+---
+
+## Lex Superior
+
+FR.Constitution > FR.Loi > FR.Decret > FR.Arrete
+
+EU.Regulation > FR.Loi
+
+EU.Directive > FR.Loi
+
+EU.Regulation ~ FR.Constitution
+
+## Grundnorm
+
+### Universal Permission
+
+> The foundational norm from which all other norms are exceptions.
+> This grundnorm establishes that absent any specific normative constraint,
+> anyone may do anything to anyone. All other norms in the system are
+> exceptions to this universal permission.
+>
+> When a norm does not explicitly specify its exception relationship,
+> it is implicitly an exception of this grundnorm. The system can generate
+> intermediate norms to bridge any gaps between the grundnorm and declared
+> norms, ensuring a complete exception hierarchy for SMT solver verification.
+
+*AnyOne* **has privilege to** *AnyAction* *AnyThing* to *AnyOne*
+{grundnorm}
 
 ---
 

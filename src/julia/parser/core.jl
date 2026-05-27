@@ -164,6 +164,9 @@ function parse_document(path, project_root=pwd(), import_chain=String[])
     # Now parse the (possibly translated) content
     ast = parser(content)
     m = parse_manifest(ast)
+    
+    # Parse jurisdiction hierarchy if present
+    jurisdiction_hierarchy = parse_jurisdiction_hierarchy(ast)
 
     entities = parse_taxonomy(ast, Entity, m.package)
     roles = parse_taxonomy(ast, Role, m.package)
@@ -173,7 +176,7 @@ function parse_document(path, project_root=pwd(), import_chain=String[])
     # Parse norms with error handling for better user experience
     norms = Norm[]
     try
-        norms = parse_norms(ast, m.package)
+        norms = parse_norms(ast, m.package, m.jurisdiction)
     catch e
         if e isa ErrorException && occursin("Malformed norm syntax", e.msg)
             # Print user-friendly error message
@@ -236,6 +239,25 @@ function parse_document(path, project_root=pwd(), import_chain=String[])
         norms = generate_intermediate_norms(norms)
     end
 
+    # Merge jurisdiction hierarchies from imported documents
+    if !isempty(imported_docs) && !isnothing(jurisdiction_hierarchy)
+        for doc in imported_docs
+            if !isnothing(doc.jurisdiction_hierarchy)
+                jurisdiction_hierarchy = merge_jurisdiction_hierarchies(jurisdiction_hierarchy, doc.jurisdiction_hierarchy)
+            end
+        end
+    elseif !isnothing(jurisdiction_hierarchy)
+        # Use the parsed hierarchy as-is
+    elseif !isempty(imported_docs)
+        # No local hierarchy, but check if any imported doc has one
+        for doc in imported_docs
+            if !isnothing(doc.jurisdiction_hierarchy)
+                jurisdiction_hierarchy = doc.jurisdiction_hierarchy
+                break
+            end
+        end
+    end
+    
     # Resolve taxons in norms to point to actual taxons in taxonomy trees
     # This ensures parent/child relationships are intact for subsumption checking
     resolve_norm_taxons!(norms, roles, actions, objects)
@@ -270,6 +292,7 @@ function parse_document(path, project_root=pwd(), import_chain=String[])
         norms=norms,
         procedures=procedures,
         parameters=parameters,
-        input_variables=input_variables
+        input_variables=input_variables,
+        jurisdiction_hierarchy=jurisdiction_hierarchy
     )
 end

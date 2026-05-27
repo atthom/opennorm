@@ -342,7 +342,7 @@ function validate_document(path::String)
     # Check satisfiability
     println("\n=== Checking Satisfiability ===")
     println("Translating OpenNorm to SMT...")
-    solver, contradictions = to_smt(document)
+    solver, contradictions = to_smt(document, document.jurisdiction_hierarchy)
     println("Running Z3 SMT solver...")
     result = check(solver)
 

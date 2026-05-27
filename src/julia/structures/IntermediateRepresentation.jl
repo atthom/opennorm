@@ -84,6 +84,43 @@ struct InputVariable <: OperationalNode
     description::Union{Nothing, String}    # Optional description
 end
 
+# === JURISDICTION SYSTEM ===
+# Represents a legal jurisdiction (e.g., FR.Constitution, EU.Regulation)
+struct Jurisdiction
+    namespace::String    # e.g., "FR", "EU"
+    name::String        # e.g., "Constitution", "Regulation"
+end
+
+# Convenience constructor from string "FR.Loi"
+function Jurisdiction(s::String)
+    parts = split(s, ".")
+    if length(parts) != 2
+        throw(ArgumentError("Invalid jurisdiction format: $s. Expected format: Namespace.Name"))
+    end
+    return Jurisdiction(String(parts[1]), String(parts[2]))
+end
+
+# String representation
+Base.string(j::Jurisdiction) = "$(j.namespace).$(j.name)"
+Base.show(io::IO, j::Jurisdiction) = print(io, string(j))
+
+# Equality and hashing for use in dictionaries/sets
+Base.:(==)(j1::Jurisdiction, j2::Jurisdiction) = j1.namespace == j2.namespace && j1.name == j2.name
+Base.hash(j::Jurisdiction, h::UInt) = hash((j.namespace, j.name), h)
+
+# Represents a hierarchical relationship between jurisdictions
+struct LexSuperior
+    superior::Jurisdiction    # Higher jurisdiction
+    inferior::Jurisdiction    # Lower jurisdiction
+    ambiguous::Bool          # true if relationship is contested (~)
+end
+
+# Container for all jurisdiction relationships
+struct JurisdictionHierarchy
+    relations::Vector{LexSuperior}    # All relations (direct + transitive)
+    jurisdictions::Set{Jurisdiction}  # All known jurisdictions
+end
+
 # === DOCUMENT METADATA ===
 @enum Lang EN FR
 @enum DocumentStatus Review Final
@@ -117,6 +154,7 @@ struct Manifest
     status::DocumentStatus
     imports::Vector{String}
     language::Lang
+    jurisdiction::Union{Nothing, Jurisdiction}
 end
 
 # === CONCRETE ENTITIES ===
@@ -134,6 +172,20 @@ struct NonLegalEntity <: ConcreteEntity
     metadata::Dict{String, Any}
 end
 
+# === CONDITION REPRESENTATION ===
+# Represents a condition clause in a norm (e.g., "lorsque *TypePropriété* = *MonumentHistorique*")
+# Note: ConditionExpr types are defined in parser/condition_parser.jl
+struct NormCondition
+    raw_text::String  # The original condition text for display and debugging
+    expr::Union{Nothing, Any}  # Parsed condition expression tree (ConditionExpr from condition_parser.jl)
+    
+    # Constructor with just raw text (for backward compatibility)
+    NormCondition(raw_text::String) = new(raw_text, nothing)
+    
+    # Constructor with parsed expression
+    NormCondition(raw_text::String, expr) = new(raw_text, expr)
+end
+
 # === NORMS ===
 # The core IR node - Abstract normative statement
 Base.@kwdef struct Norm <: IRNode
@@ -144,9 +196,63 @@ Base.@kwdef struct Norm <: IRNode
     action::Taxon{Action} = Taxon(Action, "")
     object::Taxon{Object} = Taxon(Object, "")
     counterparty::Taxon{Role} = Taxon(Role, "")
+    conditions::Vector{NormCondition} = NormCondition[]  # Conditions from "lorsque" clauses
     overrules::Vector{Norm}
+    excepts::Union{Nothing, String} = nothing  # Parent rule ref_id for exceptions
+    depth::Int = 0                              # Exception depth (0 = base rule, 1+ = exception)
     skipped::Bool
     text::String = ""  # The original norm text for display
+    jurisdiction::Union{Nothing, Jurisdiction} = nothing  # Jurisdiction from document manifest
+end
+
+"""
+    Norm(parent::Norm, ref_id::String; text::String="", conditions::Vector{NormCondition}=NormCondition[])
+
+Constructor for creating an exception norm from a parent norm.
+Automatically inherits actor, action, object, and counterparty from parent.
+Auto-computes position as O(parent.position) - the Hohfeldian opposite.
+Sets depth to parent.depth + 1 and links to parent via excepts field.
+
+This constructor is used for minimal exception syntax where only the condition
+and ref_id are specified, and everything else is inherited.
+
+# Arguments
+- `parent::Norm`: The parent norm this exception applies to
+- `ref_id::String`: The unique identifier for this exception norm
+- `text::String=""`: Optional text representation of the exception
+- `conditions::Vector{NormCondition}=NormCondition[]`: Conditions for this exception
+
+# Example
+```julia
+# Parent norm
+parent = Norm(
+    ref_id = "base-rule",
+    Hohfeld = NoRight,
+    actor = proprietaire_taxon,
+    action = deduire_taxon,
+    # ...
+)
+
+# Create exception - inherits everything, auto-computes position as O(NoRight) = Right
+exception = Norm(parent, "exception-rule", text="exception de #base-rule")
+```
+"""
+function Norm(parent::Norm, ref_id::String; text::String="", conditions::Vector{NormCondition}=NormCondition[])
+    return Norm(
+        ref_id = ref_id,
+        package = parent.package,
+        Hohfeld = O(parent.Hohfeld),  # Auto-compute opposite position
+        actor = parent.actor,
+        action = parent.action,
+        object = parent.object,
+        counterparty = parent.counterparty,
+        conditions = conditions,  # Exception-specific conditions
+        overrules = Norm[],
+        excepts = parent.ref_id,  # Link to parent
+        depth = parent.depth + 1,  # Increment depth
+        skipped = false,
+        text = text
+    )
 end
 
 # Norm relationship functions
@@ -198,6 +304,19 @@ function norms_are_related(norm1::Norm, norm2::Norm)
     return actor_related && action_related && object_related && counterparty_related
 end
 
+# Check if two norms have identical conditions
+function same_conditions(norm1::Norm, norm2::Norm)
+    if length(norm1.conditions) != length(norm2.conditions)
+        return false
+    end
+    
+    # Compare raw text of conditions (order-independent)
+    cond1_texts = Set(c.raw_text for c in norm1.conditions)
+    cond2_texts = Set(c.raw_text for c in norm2.conditions)
+    
+    return cond1_texts == cond2_texts
+end
+
 # Concrete instantiation of a norm
 struct Binding
     actor::LegalEntity
@@ -218,4 +337,5 @@ Base.@kwdef struct DocumentIR
     procedures::Vector{Procedure} = Procedure[]
     parameters::Vector{Parameter} = Parameter[]
     input_variables::Vector{InputVariable} = InputVariable[]
+    jurisdiction_hierarchy::Union{Nothing, JurisdictionHierarchy} = nothing
 end

@@ -88,13 +88,16 @@ function parse_taxonomy_list(list_node, ::Type{T}, package_name::String="") wher
                 break
             end
         end
-        text = String(strip(text))
-        isempty(text) && return
+        display_name = String(strip(text))
+        isempty(display_name) && return
         
-        # Create the taxon
+        # Normalize the name for taxonomy key
+        normalized_name = normalize_taxon_name(display_name)
+        
+        # Create the taxon with both normalized key and display name
         if depth == 0
             # Root level
-            taxon = Taxon(T, text, package_name)
+            taxon = Taxon{T}(name=normalized_name, display_name=display_name, source=package_name)
             if root === nothing
                 root = taxon
             end
@@ -102,10 +105,11 @@ function parse_taxonomy_list(list_node, ::Type{T}, package_name::String="") wher
             # Child level - attach to parent
             parent = stack[depth]
             if parent !== nothing
-                taxon = Taxon(parent, text, package_name)
+                taxon = Taxon{T}(name=normalized_name, display_name=display_name, parent=parent, source=package_name)
+                push!(parent.children, taxon)
             else
                 # No parent found, create as root
-                taxon = Taxon(T, text, package_name)
+                taxon = Taxon{T}(name=normalized_name, display_name=display_name, source=package_name)
             end
         end
         

@@ -181,6 +181,28 @@ function extract_all_kvs(paragraph)
 end
 
 """
+    normalize_taxon_name(display_name::String) -> String
+
+Normalize a display name to a taxonomy key by removing spaces.
+Preserves CamelCase and accented characters.
+
+Examples:
+- "Exploitant Agricole" -> "ExploitantAgricole"
+- "Déficit Agricole" -> "DéficitAgricole"
+- "Administration Fiscale" -> "AdministrationFiscale"
+- "Revenu Autres Sources" -> "RevenuAutresSources"
+"""
+function normalize_taxon_name(display_name::String)
+    # Remove leading/trailing whitespace
+    name = strip(display_name)
+    
+    # Remove spaces between words (preserves CamelCase and accents)
+    name = replace(name, r"\s+" => "")
+    
+    return name
+end
+
+"""
 Safe accessors for CommonMark.Node fields that may be uninitialized.
 """
 function cm_first_child(node::CommonMark.Node)

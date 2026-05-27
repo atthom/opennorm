@@ -13,7 +13,8 @@ struct Action <: TaxonomyEnum end
 struct Object <: TaxonomyEnum end
 
 Base.@kwdef mutable struct Taxon{T<:TaxonomyEnum} <: IRNode
-    name::String
+    name::String                    # Normalized key (e.g., "ExploitantAgricole")
+    display_name::String = name     # Display version (e.g., "Exploitant Agricole")
     parent::Union{Nothing, Taxon{T}} = nothing
     children::Vector{Taxon{T}} = Vector{Taxon{T}}()
     source::String = ""  # Package name that defined this taxon
@@ -22,10 +23,10 @@ end
 AbstractTrees.children(n::Taxon{T}) where T = n.children
 AbstractTrees.parent(n::Taxon{T}) where T = n.parent
 
-Taxon(::Type{T}, name::String, source::String="") where {T<:TaxonomyEnum} = Taxon{T}(name, nothing, Vector{Taxon{T}}(), source)
+Taxon(::Type{T}, name::String, source::String="") where {T<:TaxonomyEnum} = Taxon{T}(name, name, nothing, Vector{Taxon{T}}(), source)
 
 function Taxon(parent::Taxon{T}, name::String, source::String="") where {T<:TaxonomyEnum} 
-    t = Taxon{T}(name, parent, Taxon{T}[], source)
+    t = Taxon{T}(name, name, parent, Taxon{T}[], source)
     push!(parent.children, t)
     return t
 end

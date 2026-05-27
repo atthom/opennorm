@@ -36,6 +36,16 @@ function parse_manifest(ast)
         language = get_lang(ctx.kvs["language"])
     end
 
+    # Parse jurisdiction if present
+    jurisdiction = nothing
+    if haskey(ctx.kvs, "jurisdiction")
+        try
+            jurisdiction = Jurisdiction(ctx.kvs["jurisdiction"])
+        catch e
+            throw(ArgumentError("Invalid jurisdiction format in manifest: $(ctx.kvs["jurisdiction"]). Expected format: Namespace.Name (e.g., FR.Loi)"))
+        end
+    end
+
     return Manifest(
         ctx.title, 
         join(ctx.description_lines, "\n"), 
@@ -46,7 +56,8 @@ function parse_manifest(ast)
         normLevel, 
         status, 
         ctx.imports, 
-        language
+        language,
+        jurisdiction
     )
 end
 

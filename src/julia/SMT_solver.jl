@@ -134,12 +134,152 @@ function add_taxonomy_constraints!(s::Solver, ctx::Context, norms::Vector{Norm})
     return taxonomy_conflicts
 end
 
-function to_smt(ir::DocumentIR)
+"""
+    encode_jurisdiction_hierarchy!(s::Solver, hierarchy::JurisdictionHierarchy, ctx::Context)
+
+Encode jurisdiction hierarchy as SMT constraints using integer ordering.
+Each jurisdiction gets an integer variable, and superior > inferior relationships
+are encoded as integer constraints. Z3 automatically handles:
+- Transitivity (if A>B and B>C, then A>C)
+- Cycle detection (if A>B>C>A, SMT will be UNSAT)
+
+Returns a dictionary mapping Jurisdiction to Z3 integer expressions.
+"""
+function encode_jurisdiction_hierarchy!(s::Solver, hierarchy::JurisdictionHierarchy, ctx::Context)
+    jurisdiction_vars = Dict{Jurisdiction, Any}()
+    
+    # Create integer variables for each jurisdiction
+    for j in hierarchy.jurisdictions
+        var_name = "jurisdiction_$(j.namespace)_$(j.name)"
+        jurisdiction_vars[j] = IntVar(var_name, ctx)
+    end
+    
+    # Encode hierarchy relations as SMT constraints
+    for rel in hierarchy.relations
+        if !rel.ambiguous
+            # Non-ambiguous: superior > inferior
+            sup_var = jurisdiction_vars[rel.superior]
+            inf_var = jurisdiction_vars[rel.inferior]
+            add(s, sup_var > inf_var)
+        end
+        # Ambiguous relationships: no constraint added (allows coexistence)
+    end
+    
+    return jurisdiction_vars
+end
+
+"""
+    get_jurisdiction_var(ctx::Context, j::Jurisdiction)
+
+Helper function to get the Z3 integer variable for a jurisdiction.
+This is used in tests to verify the SMT encoding.
+"""
+function get_jurisdiction_var(ctx::Context, j::Jurisdiction)
+    var_name = "jurisdiction_$(j.namespace)_$(j.name)"
+    return IntVar(var_name, ctx)
+end
+
+"""
+    add_jurisdiction_constraints!(s::Solver, norms::Vector{Norm}, 
+                                   hierarchy::Union{Nothing, JurisdictionHierarchy},
+                                   ctx::Context)
+
+Add SMT constraints for jurisdiction-based conflict resolution.
+When two norms contradict:
+- If one has higher jurisdiction: no conflict (higher wins)
+- If jurisdictions are ambiguous (~): flag as potential conflict
+- If no jurisdiction relation: flag as conflict
+"""
+function add_jurisdiction_constraints!(s::Solver, norms::Vector{Norm}, 
+                                       hierarchy::Union{Nothing, JurisdictionHierarchy},
+                                       ctx::Context)
+    jurisdiction_conflicts = []
+    
+    # If no hierarchy, skip jurisdiction validation
+    if isnothing(hierarchy)
+        return jurisdiction_conflicts
+    end
+    
+    for i in 1:length(norms)
+        for j in (i+1):length(norms)
+            norm1, norm2 = norms[i], norms[j]
+            
+            # Only check if norms contradict
+            if !are_opposites(norm1.Hohfeld, norm2.Hohfeld)
+                continue
+            end
+            
+            if !same_norm_relationship(norm1, norm2)
+                continue
+            end
+            
+            # Skip if exception relationship (exceptions allowed to contradict parents)
+            is_exception = (!isnothing(norm1.excepts) && norm1.excepts == norm2.ref_id) ||
+                          (!isnothing(norm2.excepts) && norm2.excepts == norm1.ref_id)
+            if is_exception
+                continue
+            end
+            
+            # Skip if explicit overrule
+            if has_overrule_relationship(norm1, norm2)
+                continue
+            end
+            
+            # Get jurisdictions
+            j1 = norm1.jurisdiction
+            j2 = norm2.jurisdiction
+            
+            # If either norm has no jurisdiction, can't apply jurisdiction resolution
+            if isnothing(j1) || isnothing(j2)
+                continue
+            end
+            
+            # If same jurisdiction, can't resolve via jurisdiction hierarchy
+            if j1 == j2
+                continue
+            end
+            
+            # Check jurisdiction relationship
+            relation = get_jurisdiction_relation(hierarchy, j1, j2)
+            
+            if relation == :ambiguous
+                # Ambiguous relationship - flag as potential conflict
+                push!(jurisdiction_conflicts, (
+                    norm1_ref = norm1.ref_id,
+                    norm2_ref = norm2.ref_id,
+                    conflict_type = "ambiguous_jurisdiction",
+                    j1 = string(j1),
+                    j2 = string(j2)
+                ))
+            elseif relation === nothing
+                # No relationship defined - flag as conflict
+                push!(jurisdiction_conflicts, (
+                    norm1_ref = norm1.ref_id,
+                    norm2_ref = norm2.ref_id,
+                    conflict_type = "undefined_jurisdiction_relation",
+                    j1 = string(j1),
+                    j2 = string(j2)
+                ))
+            end
+            # If relation is :superior or :inferior, higher jurisdiction wins (no conflict)
+        end
+    end
+    
+    return jurisdiction_conflicts
+end
+
+function to_smt(ir::DocumentIR, hierarchy::Union{Nothing, JurisdictionHierarchy}=nothing)
     ctx = Context()
     s = Solver(ctx)
     
     # Filter non-skipped norms
     active_norms = filter(n -> !n.skipped, ir.norms)
+    
+    # Encode jurisdiction hierarchy if provided
+    jurisdiction_vars = Dict{Jurisdiction, Any}()
+    if !isnothing(hierarchy)
+        jurisdiction_vars = encode_jurisdiction_hierarchy!(s, hierarchy, ctx)
+    end
     
     # Add core axioms with contradiction detection
     contradictions = add_core_axioms!(s, ctx, active_norms)
@@ -149,8 +289,12 @@ function to_smt(ir::DocumentIR)
     # (parent-child relationships) have opposite Hohfeldian positions
     taxonomy_conflicts = add_taxonomy_constraints!(s, ctx, active_norms)
     
-    # Merge taxonomy conflicts into contradictions for unified reporting
+    # Add jurisdiction constraints
+    jurisdiction_conflicts = add_jurisdiction_constraints!(s, active_norms, hierarchy, ctx)
+    
+    # Merge all conflicts into contradictions for unified reporting
     append!(contradictions, taxonomy_conflicts)
+    append!(contradictions, jurisdiction_conflicts)
     
     # Add norms — skip excluded norms
     for norm in active_norms
