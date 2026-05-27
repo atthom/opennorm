@@ -139,3 +139,47 @@ function code_gen(backend::YAMLBackend, ir::DocumentIR)::String
     # Convert to YAML string
     return YAML.write(yaml_dict)
 end
+
+# ============================================================================
+# HIGH-LEVEL YAML FILE GENERATION
+# ============================================================================
+
+"""
+    generate_yaml_file(ir::DocumentIR, output_path::String)::String
+
+Generate and write a YAML parameter file from DocumentIR.
+
+# Arguments
+- `ir::DocumentIR`: The document IR containing the taxonomy
+- `output_path::String`: Path where the YAML file should be written
+
+# Returns
+- `String`: The generated YAML content
+"""
+function generate_yaml_file(ir::DocumentIR, output_path::String)::String
+    backend = YAMLBackend()
+    yaml_content = code_gen(backend, ir)
+    
+    # Write to file
+    open(output_path, "w") do f
+        write(f, yaml_content)
+    end
+    
+    return yaml_content
+end
+
+"""
+    generate_yaml_parameters(ir::DocumentIR)::String
+
+Generate YAML parameter content from DocumentIR without writing to file.
+
+# Arguments
+- `ir::DocumentIR`: The document IR containing the taxonomy
+
+# Returns
+- `String`: The generated YAML content
+"""
+function generate_yaml_parameters(ir::DocumentIR)::String
+    backend = YAMLBackend()
+    return code_gen(backend, ir)
+end

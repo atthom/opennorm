@@ -119,3 +119,35 @@ function print_validation_report(errors::Vector{ValidationError})
     println(stderr, "  3. Verify terms are in the correct taxonomy")
     println(stderr, "═══════════════════════════════════════════════════════════════\n")
 end
+
+"""
+    validate_bilateral_norm(norm::Norm)
+
+Validate that a norm is a bilateral relationship between two Roles.
+Norms must always have both an actor and a counterparty (both non-empty Roles).
+
+This enforces the architectural principle that:
+- Norms are legal relationships between parties (always bilateral)
+- Computational processes belong in Procedures (not Norms)
+
+Throws an error if the norm violates the bilateral constraint.
+"""
+function validate_bilateral_norm(norm::Norm)
+    # Check actor is non-empty
+    if isempty(norm.actor.name)
+        error("Norm '$(norm.ref_id)': Actor cannot be empty.\n" *
+              "Norms must be bilateral relationships between two Roles.\n" *
+              "If you're describing a calculation or process, use a Procedure instead.")
+    end
+    
+    # Check counterparty is non-empty
+    if isempty(norm.counterparty.name)
+        error("Norm '$(norm.ref_id)': Counterparty cannot be empty.\n" *
+              "Norms must be bilateral relationships between two Roles.\n" *
+              "A norm describes a legal relationship between an actor and a counterparty.\n" *
+              "If you're describing a calculation or process (e.g., 'imputer X envers Y'),\n" *
+              "this should be modeled as a Procedure in the Procedures section, not as a Norm.")
+    end
+    
+    return true
+end

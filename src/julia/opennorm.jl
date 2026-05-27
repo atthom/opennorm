@@ -384,7 +384,7 @@ function validate_document(path::String)
     return (document, solver, result)
 end
 
-function opennorm(path::String; openfisca_output::Union{String, Nothing}=nothing)
+function opennorm(path::String; openfisca_output::Union{String, Nothing}=nothing, graph_output::Bool=false)
     """
     Main entry point for OpenNorm validation.
     Returns true if the document is satisfiable, false otherwise.
@@ -392,6 +392,7 @@ function opennorm(path::String; openfisca_output::Union{String, Nothing}=nothing
     Arguments:
     - path: Path to the OpenNorm document
     - openfisca_output: Optional path to write generated OpenFisca Python code
+    - graph_output: Generate Mermaid flowchart (requires openfisca_output)
     """
     result = validate_document(path)
     result === nothing && return false
@@ -421,6 +422,21 @@ function opennorm(path::String; openfisca_output::Union{String, Nothing}=nothing
         end
     end
     
+    
+    # Generate graph if requested
+    if graph_output && openfisca_output !== nothing
+        println("\n=== Generating Norm Dependency Graph ===")
+        try
+            graph_path = write_graph_file(doc, openfisca_output)
+            println("✓ Graph generated successfully")
+            println("  Output file: $graph_path")
+        catch e
+            println("✗ Error generating graph:")
+            showerror(stdout, e, catch_backtrace())
+            println()
+        end
+    end
+    
     return string(check_result) == "sat"
 end
 
@@ -434,15 +450,18 @@ function main()
         println("Arguments:")
         println("  document_path        Path to the OpenNorm document to validate")
         println("  --openfisca PATH     Generate OpenFisca Python code to the specified path")
+        println("  --graph              Generate Mermaid flowchart (requires --openfisca)")
         println()
         println("Example:")
         println("  julia opennorm.jl ./documents/articles/CGI.Art.156.md")
         println("  julia opennorm.jl ./documents/articles/CGI.Art.156.opennorm.md --openfisca output.py")
+        println("  julia opennorm.jl ./documents/articles/CGI.Art.156.opennorm.md --openfisca output.py --graph")
         return
     end
     
     doc_path = args[1]
     openfisca_output = nothing
+    graph_output = false
     
     # Parse optional --openfisca argument
     i = 2
@@ -450,6 +469,9 @@ function main()
         if args[i] == "--openfisca" && i < length(args)
             openfisca_output = args[i + 1]
             i += 2
+        elseif args[i] == "--graph"
+            graph_output = true
+            i += 1
         else
             println("Warning: Unknown argument '$(args[i])'")
             i += 1
@@ -457,7 +479,7 @@ function main()
     end
     
     # Validate the document
-    is_valid = opennorm(doc_path; openfisca_output=openfisca_output)
+    is_valid = opennorm(doc_path; openfisca_output=openfisca_output, graph_output=graph_output)
     
     println("\n=== Final Result ===")
     println(is_valid ? "✓ Document is valid" : "✗ Document has issues")

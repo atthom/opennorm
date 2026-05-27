@@ -191,7 +191,7 @@ function resolve_norm_taxons!(norms::Vector{Norm}, actor_taxonomy::Taxon{Role},
         resolved_object = resolve_taxon_in_tree(object_taxonomy, norm.object.name)
         resolved_counterparty = resolve_taxon_in_tree(actor_taxonomy, norm.counterparty.name)
         
-        # Create a new norm with resolved taxons (preserve the text field)
+        # Create a new norm with resolved taxons (preserve all fields including excepts, depth, conditions)
         norms[i] = Norm(
             ref_id=norm.ref_id,
             package=norm.package,
@@ -200,7 +200,10 @@ function resolve_norm_taxons!(norms::Vector{Norm}, actor_taxonomy::Taxon{Role},
             action=resolved_action,
             object=resolved_object,
             counterparty=resolved_counterparty,
+            conditions=norm.conditions,
             overrules=norm.overrules,
+            excepts=norm.excepts,
+            depth=norm.depth,
             skipped=norm.skipped,
             text=norm.text
         )

@@ -170,7 +170,24 @@ function parse_document(path, project_root=pwd(), import_chain=String[])
     actions = parse_taxonomy(ast, Action, m.package)
     objects = parse_taxonomy(ast, Object, m.package)
 
-    norms = parse_norms(ast, m.package)
+    # Parse norms with error handling for better user experience
+    norms = Norm[]
+    try
+        norms = parse_norms(ast, m.package)
+    catch e
+        if e isa ErrorException && occursin("Malformed norm syntax", e.msg)
+            # Print user-friendly error message
+            println(stderr, "\n═══════════════════════════════════════════════════════════════")
+            println(stderr, "❌ NORM SYNTAX ERROR")
+            println(stderr, "═══════════════════════════════════════════════════════════════\n")
+            println(stderr, e.msg)
+            println(stderr, "\n═══════════════════════════════════════════════════════════════\n")
+            error("Document parsing failed. Please fix the syntax error above.")
+        else
+            # Re-throw other errors
+            rethrow(e)
+        end
+    end
 
     # Process imports if any
     imported_docs = DocumentIR[]
@@ -195,7 +212,28 @@ function parse_document(path, project_root=pwd(), import_chain=String[])
         for doc in imported_docs
             append!(all_norms, doc.norms)
         end
-        norms = all_norms
+        
+        # Deduplicate norms by (ref_id, package) - keep first occurrence
+        # This prevents the same norm (e.g., grundnorm) from appearing multiple times
+        # when it's imported by multiple documents
+        seen = Set{Tuple{String, String}}()
+        deduplicated_norms = Norm[]
+        for norm in all_norms
+            key = (norm.ref_id, norm.package)
+            if !(key in seen)
+                push!(seen, key)
+                push!(deduplicated_norms, norm)
+            end
+        end
+        norms = deduplicated_norms
+    end
+
+    # Generate intermediate norms to bridge orphans to grundnorm
+    # This ensures all norms are properly connected in the exception hierarchy
+    # Only do this at the top level (when import_chain is empty) to avoid
+    # processing the same norms multiple times during recursive imports
+    if isempty(import_chain)
+        norms = generate_intermediate_norms(norms)
     end
 
     # Resolve taxons in norms to point to actual taxons in taxonomy trees

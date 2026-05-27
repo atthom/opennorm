@@ -27,10 +27,12 @@
 ## Conditional Keywords
 
 - lorsque → when
+- exception de → excepts
 - a → has
 - jusqu'à → up to
 - entre → between
 - et → and
+- ou → or
 - au-dessus de → above
 
 ## Legal Entities
