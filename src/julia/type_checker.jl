@@ -391,7 +391,9 @@ function parse_expression_for_type_checking(text::Union{String, SubString{String
     # Try to parse as variable reference (in *italics*)
     m = match(r"^\*([^*]+)\*$", text)
     if m !== nothing
-        return VariableRef(strip(m.captures[1]))
+        # Normalize variable name to match taxonomy keys (remove spaces)
+        var_name = normalize_taxon_name(strip(m.captures[1]))
+        return VariableRef(var_name)
     end
     
     # Try to parse as literal with unit (improved regex to handle leading zeros)
@@ -412,7 +414,8 @@ function parse_expression_for_type_checking(text::Union{String, SubString{String
     
     # If nothing else works, treat as variable name without asterisks
     # This handles cases where variables are referenced without markdown formatting
-    return VariableRef(text)
+    # Normalize the variable name to match taxonomy keys (remove spaces)
+    return VariableRef(normalize_taxon_name(text))
 end
 
 """

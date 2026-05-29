@@ -181,7 +181,7 @@ function extract_all_kvs(paragraph)
 end
 
 """
-    normalize_taxon_name(display_name::String) -> String
+    normalize_taxon_name(display_name::Union{String, SubString{String}}) -> String
 
 Normalize a display name to a taxonomy key by removing spaces.
 Preserves CamelCase and accented characters.
@@ -192,14 +192,14 @@ Examples:
 - "Administration Fiscale" -> "AdministrationFiscale"
 - "Revenu Autres Sources" -> "RevenuAutresSources"
 """
-function normalize_taxon_name(display_name::String)
+function normalize_taxon_name(display_name::Union{String, SubString{String}})
     # Remove leading/trailing whitespace
     name = strip(display_name)
     
     # Remove spaces between words (preserves CamelCase and accents)
     name = replace(name, r"\s+" => "")
     
-    return name
+    return String(name)
 end
 
 """

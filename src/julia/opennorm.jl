@@ -301,8 +301,10 @@ function validate_document(path::String)
                     # Validate the pre-parsed expression (parsing now happens in parser.jl)
                     try
                         # Use the pre-parsed expression tree from the Procedure struct
+                        # Note: proc.name is normalized (no spaces), used for type_env lookup
                         validate_computed_variable(proc.name, proc.expression, type_env, proc.location)
-                        println("  ✓ *$(proc.name)* (validated)")
+                        # Display with the original name (with spaces) for readability
+                        println("  ✓ *$(proc.display_name)* (validated)")
                         valid_count += 1
                     catch e
                         if e isa DimensionalMismatchError
@@ -311,7 +313,7 @@ function validate_document(path::String)
                             error_count += 1
                         else
                             # For other errors (e.g., parsing issues), show warning with details
-                            println("  ⚠ *$(proc.name)* ($(typeof(e)): $(e))")
+                            println("  ⚠ *$(proc.display_name)* ($(typeof(e)): $(e))")
                             error_count += 1
                         end
                     end

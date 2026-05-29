@@ -45,6 +45,7 @@ function parse_procedures(ast::CommonMark.Node, document_path::String="")
                 # Match headings with asterisks: ## *VariableName*
                 m = match(r"^\*([^*]+)\*$", heading_text)
                 if m !== nothing
+                    # Store the display name (with spaces) and will normalize later
                     current_procedure_name = m.captures[1]
                     current_description = nothing
                     current_line = node.sourcepos !== nothing ? node.sourcepos[1][1] : 0
@@ -131,12 +132,16 @@ function parse_procedures(ast::CommonMark.Node, document_path::String="")
                     parse_expression_for_type_checking(expression_text)
                 end
                 
-                # Create procedure with both parsed AST and raw text
+                # Normalize the procedure name for taxonomy lookup
+                normalized_name = normalize_taxon_name(current_procedure_name)
+                
+                # Create procedure with both normalized and display names
                 proc = Procedure(
-                    current_procedure_name,
+                    normalized_name,           # Normalized name (without spaces)
+                    current_procedure_name,    # Display name (with spaces)
                     current_description,
-                    parsed_expr,      # Parsed expression tree for type checking
-                    expression_text,  # Raw text for debugging/display
+                    parsed_expr,               # Parsed expression tree for type checking
+                    expression_text,           # Raw text for debugging/display
                     location
                 )
                 

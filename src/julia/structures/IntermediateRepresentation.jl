@@ -59,7 +59,8 @@ AbstractTrees.children(n::CumulativeCaseExpression) = [result for (_, result) in
 # Operational Layer: Procedure structure
 # Represents a computational procedure from Layer 2 that calculates a ComputedVariable
 struct Procedure <: OperationalNode
-    name::String                           # Output variable name (e.g., "DéficitAgricoleImputable")
+    name::String                           # Normalized variable name (e.g., "DéficitAgricoleImputable")
+    display_name::String                   # Display name with spaces (e.g., "Déficit Agricole Imputable")
     description::Union{Nothing, String}    # Optional description from blockquote
     expression::ExprNode                   # Parsed expression tree for type checking
     expression_text::String                # Raw expression text for debugging/display
