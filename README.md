@@ -145,75 +145,6 @@ OpenNorm separates legal documents into three distinct layers:
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 Parsing Pipeline
-
-The following flowchart shows the complete OpenNorm document parsing and validation pipeline, organized by the three architectural layers:
-
-```mermaid
-flowchart TD
-    Start([Document Path]) --> Load[Load Markdown File]
-    
-    subgraph Normative["NORMATIVE LAYER - Syntax & Semantics Validation"]
-        Load -->|Markdown AST| Manifest[Parse Manifest<br/>& Imports]
-        Manifest -->|Manifest + Import List| ParseTax[Parse & Merge<br/>Taxonomies]
-        ParseTax -->|4 Taxonomies<br/>Entity, Role, Action, Object| ParseNorms[Parse Norms<br/>Hohfeldian Positions]
-        ParseNorms -->|Norm List| ValidateNorms[Validate Norms<br/>& Exception Hierarchy]
-        
-        Manifest -.->|Error| ErrNorm
-        ParseTax -.->|Error| ErrNorm
-        ParseNorms -.->|Error| ErrNorm
-        ValidateNorms -.->|Error| ErrNorm
-    end
-    
-    ValidateNorms -->|Validated Norms| NormResult[✅ Normative Layer Complete<br/>OpenNorm Syntax Verified]
-    ErrNorm[❌ Normative Errors<br/>Invalid syntax, undefined terms,<br/>taxonomy conflicts]
-    
-    subgraph Operational["OPERATIONAL LAYER - Type & Dimensional Validation"]
-        NormResult --> ParseProc[Parse Procedures<br/>Layer 2]
-        ParseProc -->|Procedure ASTs| BuildIR[Build Intermediate<br/>Representation]
-        BuildIR -->|DocumentIR| DimAnalysis[Dimensional Analysis<br/>Type Checking]
-        
-        ParseProc -.->|Error| ErrOp
-        BuildIR -.->|Error| ErrOp
-        DimAnalysis -.->|Error| ErrOp
-    end
-    
-    DimAnalysis -->|Type-Checked IR| OpResult[✅ Operational Layer Complete<br/>Variable types & taxonomy verified]
-    ErrOp[❌ Operational Errors<br/>Type mismatches, unit errors,<br/>undefined variables]
-    
-    subgraph Implementation["IMPLEMENTATION LAYER - Code Generation & Verification"]
-        OpResult --> SMTLower[SMT Translation<br/>to Z3]
-        SMTLower -->|Z3 Assertions| SMTValidate[Z3 Solver<br/>Satisfiability Check]
-        
-        SMTLower -.->|Error| ErrImpl
-        SMTValidate -.->|UNSAT| ErrImpl
-    end
-    
-    SMTValidate -->|SAT| ImplResult[✅ Implementation Complete<br/>Logical consistency verified]
-    ErrImpl[❌ Implementation Errors<br/>Translation failed,<br/>contradictions detected]
-    
-    ImplResult --> CodeGen{Generate Code?}
-    CodeGen -->|Yes| GenCode[Generate OpenFisca<br/>Python, YAML, Graphs]
-    CodeGen -->|No| End([Complete])
-    GenCode -->|Generated Code| End
-    GenCode -.->|Error| ErrImpl
-    
-    ErrNorm --> End
-    ErrOp --> End
-    ErrImpl --> End
-    
-    style Start fill:#e1f5ff
-    style End fill:#e1f5ff
-    style NormResult fill:#d4edda
-    style OpResult fill:#d4edda
-    style ImplResult fill:#d4edda
-    style ErrNorm fill:#f8d7da
-    style ErrOp fill:#f8d7da
-    style ErrImpl fill:#f8d7da
-    style Normative fill:#fff9e6,stroke:#ffc107,stroke-width:3px
-    style Operational fill:#e8f5e9,stroke:#4caf50,stroke-width:3px
-    style Implementation fill:#e3f2fd,stroke:#2196f3,stroke-width:3px
-```
 
 **Three-Layer Pipeline:**
 
@@ -778,44 +709,6 @@ Exceptions use depth-based position flipping:
 
 The exception automatically gets position O(Right) = NoRight.
 
-### 9.4 Norm Anatomy
-
-Every OpenNorm norm is composed of required fields and optional modifiers:
-
-```mermaid
-flowchart LR
-    subgraph Core["Required — Core Norm Tuple"]
-        Subject["*Subject*\n(Role Taxonomy)"]
-        Verb["**Hohfeldian Verb**\n→ determines Position"]
-        Action["*action*\n(Action Taxonomy)"]
-        Object["*object*\n(Object Taxonomy)"]
-        Counterparty["*Counterparty*\n(Role Taxonomy)"]
-
-        Subject --> Verb --> Action --> Object --> Counterparty
-    end
-
-    subgraph Modifiers["Optional — Modifiers"]
-        Exception["exception de #ref\n→ Position = O(parent.position)\n   depth + 1"]
-        Overrules["overrules #ref\n→ lex specialis precedence\n   same depth"]
-        Condition["when *condition*\n→ boolean guard\n   over taxonomy terms"]
-    end
-
-    Core --> Exception
-    Core --> Overrules
-    Core --> Condition
-
-    Exception --> NormIR["Norm IR\n(Intermediate Representation)"]
-    Overrules --> NormIR
-    Condition --> NormIR
-    Core --> NormIR
-
-    style Core fill:#fff9e6,stroke:#ffc107,stroke-width:2px
-    style Modifiers fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
-    style NormIR fill:#d4edda,stroke:#28a745,stroke-width:2px
-    style Exception fill:#e3f2fd
-    style Overrules fill:#e3f2fd
-    style Condition fill:#e3f2fd
-```
 
 **Core Fields (all required):**
 
