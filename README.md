@@ -1,8 +1,13 @@
-# OpenNorm — Project Documentation v0.2
+# OpenNorm — Formal Verification for Legal Documents
 
 > A formal notation for writing governance documents that can be read by humans
 > and verified by machines, applicable at any scale from a software license
 > to a regulatory compliance framework.
+
+**Current Status:** Working implementation with French tax code (Code Général des Impôts Article 156)
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Julia](https://img.shields.io/badge/Julia-1.12+-purple.svg)](https://julialang.org/)
 
 ---
 
@@ -11,19 +16,20 @@
 1. [Vision and Strategic Context](#1-vision-and-strategic-context)
 2. [Core Design Philosophy](#2-core-design-philosophy)
 3. [Architecture Overview](#3-architecture-overview)
-4. [The OpenNorm Document Format](#4-the-opennorm-document-format)
-5. [The Stdlib](#5-the-stdlib)
-6. [The Parser — Rust + pest](#6-the-parser--rust--pest)
-7. [The Checker](#7-the-checker)
-8. [The Transpiler — Lean 4](#8-the-transpiler--lean-4)
-9. [The Report](#9-the-report)
-10. [The LSP — Live Drafting](#10-the-lsp--live-drafting)
-11. [The Query Layer](#11-the-query-layer)
-12. [CLI Interface](#12-cli-interface)
-13. [MVP — MIT License in OpenNorm](#13-mvp--mit-license-in-opennorm)
-14. [Phase 2 — GDPR Compliance for Business Processes](#14-phase-2--gdpr-compliance-for-business-processes)
-15. [Known Limitations and Honest Boundaries](#15-known-limitations-and-honest-boundaries)
-16. [Roadmap](#16-roadmap)
+4. [The Three-Layer System](#4-the-three-layer-system)
+5. [Technology Stack](#5-technology-stack)
+6. [Quick Start](#6-quick-start)
+7. [Import System & Modular Architecture](#7-import-system--modular-architecture)
+8. [The OpenNorm Document Format](#8-the-opennorm-document-format)
+9. [Hohfeldian Position System](#9-hohfeldian-position-system)
+10. [Taxonomy System](#10-taxonomy-system)
+11. [Dimensional Analysis](#11-dimensional-analysis)
+12. [SMT Validation with Z3](#12-smt-validation-with-z3)
+13. [Code Generation](#13-code-generation)
+14. [The Universal Grundnorm](#14-the-universal-grundnorm)
+15. [Built-in Constraints & Verification](#15-built-in-constraints--verification)
+16. [CLI Interface](#16-cli-interface)
+17. [Development](#17-development)
 
 ---
 
@@ -32,80 +38,36 @@
 ### 1.1 The Problem with Legal and Governance Documents
 
 Legal documents — licenses, contracts, charters, regulatory frameworks — share a
-structural failure: they are written once, sometimes under a time pressure, by a small group,
+structural failure: they are written once, sometimes under time pressure, by a small group,
 with no formal mechanism to detect internal contradictions, no versioning system,
 no automated testing, and no way to check whether a new clause conflicts with an
 existing one.
 
 The consequences are severe:
 
-- **Ambiguity accumulates.** Terms like "distribute" or "reasonable" are left
-  undefined. Courts resolve them decades later, inconsistently across jurisdictions.
-- **Crisis-driven drafting.** Most governance documents are written under time
-  pressure. They solve the immediate problem and leave the next one's attack
-  surface wide open.
-- **No contradiction detection.** A document can simultaneously grant and prohibit
-  the same action, and nobody notices until a court case forces a ruling.
-- **Fuzziness is invisible.** Intentional flexibility and accidental gaps look
-  identical in natural language. There is no mechanism to distinguish them.
-- **Compliance is manual.** Verifying that a business process complies with a
-  regulation requires expensive, point-in-time, non-reproducible human review
-  that expires the moment anything changes.
+- **Ambiguity accumulates.** Terms are left undefined. Courts resolve them decades later, inconsistently.
+- **No contradiction detection.** A document can simultaneously grant and prohibit the same action.
+- **Compliance is manual.** Verifying compliance requires expensive, point-in-time, non-reproducible human review.
+- **Calculations are opaque.** Tax codes and regulations contain complex calculations that are difficult to verify.
 
-### 1.2 The Open Source Parallel
+### 1.2 The OpenNorm Approach
 
-The most secure protocols in the world — TLS, SSH, OpenSSL — are open source.
-They are stronger because thousands of people examine them continuously.
-Vulnerabilities are found, disclosed, and patched. The code gets better over time
-precisely because it is open and attacked.
+OpenNorm applies formal methods to legal documents through three key innovations:
 
-Legal documents have never been treated this way. OpenNorm applies the open source
-model to governance documents:
+1. **Hohfeldian Position System** — Every legal relationship is expressed as one of eight fundamental positions (Right, Duty, Privilege, NoRight, Power, Disability, Liability, Immunity), enabling precise contradiction detection.
 
-- Community maintained, forkable, versioned
-- Machine-checkable for internal consistency
-- Adversarially tested against known historical failure modes
-- Transparent about ambiguity rather than hiding it
+2. **Three-Layer Architecture** — Separates normative rules (Layer 1) from computational procedures (Layer 2) from implementation code (Layer 3), allowing each to be verified independently.
 
-### 1.3 The Strategic Opportunity
+3. **Dimensional Analysis** — Type-checks calculations with units (EUR, years, dates) to catch dimensional mismatches before runtime.
 
-OpenNorm is immediately useful for software licenses, contracts, NGO charters,
-and organisational governance. Its most significant near-term commercial application
-is regulatory compliance verification — specifically, verifying that business
-processes comply with formal regulations such as the GDPR.
+### 1.3 Current Focus: French Tax Code
 
-The GDPR compliance problem is today solved by consultants with checklists,
-privacy-by-design workshops, and GRC platforms built around human attestation.
-None of these provide formal, machine-checkable, continuously-valid verification.
-OpenNorm does.
+The current implementation focuses on the French tax code (Code Général des Impôts), specifically Article 156 on income tax deductions and deficit carryforward rules. This provides:
 
-A process that was compliant yesterday can be automatically flagged as non-compliant
-today because someone added a data-sharing step without a legal basis. The regulation
-is encoded once, formally. Every process is checked against the same encoding.
-Findings map to specific process elements and specific regulatory articles.
-The sorry inventory tells the DPO precisely where human judgment is required and why.
-
-### 1.4 Adoption Path
-
-```
-Software licenses      ← MVP. Immediate value. Proves the tool works.
-        ↓
-GDPR compliance        ← Phase 2. Largest near-term commercial opportunity.
-for business processes   Verifies BPMN processes against formal GDPR encoding.
-        ↓
-Contracts              ← More complex. Two-party dynamics. Framework axioms matter.
-        ↓
-NGO and org charters   ← First governance documents. Real stakes.
-        ↓
-Open source project    ← Natural community. DAO overlap.
-governance
-        ↓
-International          ← Treaty language, multi-jurisdiction.
-frameworks
-```
-
-Each step is independently valuable. Each step stress-tests the tool and generates
-the community and credibility needed for the next.
+- **Real-world complexity** — Multi-article regulations with exceptions and cross-references
+- **Computational requirements** — Tax calculations with dimensional constraints
+- **Practical value** — Generates executable OpenFisca code for tax simulations
+- **Validation target** — SMT solver verifies logical consistency of rules
 
 ---
 
@@ -119,21 +81,12 @@ the community and credibility needed for the next.
 This is not a preference. It is a hard constraint that governs every design
 decision. Complexity is hidden in the tooling, never exposed in the document.
 
-A lawyer who receives an OpenNorm document reads a clean, professional legal text.
-The formal machinery is invisible infrastructure underneath a human-readable surface.
-
 ### 2.2 The Single Source of Truth
 
-> **Every .md file is the source of truth. No hand-written Lean 4 files exist.**
+> **Every .md file is the source of truth. All generated code is derived from markdown.**
 
-All generated `.lean` files are outputs of the transpiler. They are never edited
-directly. They are not committed as sources. If a `.lean` file is lost, it is
-regenerated from the `.md` source.
-
-This applies to the stdlib as well. The universal deontic axioms that form the
-foundation of the formal system live in `stdlib/frameworks/universal/core.md`,
-not in a hand-written `Deontic.lean`. The transpiler generates the Lean 4 preamble
-from that file on every run.
+All generated `.py` (OpenFisca), `.lean`, or other files are outputs. They are never edited
+directly. If a generated file is lost, it is regenerated from the `.md` source.
 
 ### 2.3 Three Term States
 
@@ -141,1678 +94,1536 @@ Every term in an OpenNorm document is in one of three states:
 
 | State | Syntax | Meaning | Checker Response |
 |---|---|---|---|
-| **Resolved** | `*distribute*` | Defined in stdlib or local Definitions | Verified against imported package |
-| **Fuzzy** | `~~reasonable~~` | Intentionally flexible, declared | Warning issued, review trigger required |
-| **Undefined** | `distribute` (plain) | Not declared anywhere | Hard error in review/final mode |
-
-Fuzziness is a feature, not a failure. Intentional flexibility is load-bearing in
-legal documents — it allows them to survive changing circumstances without amendment.
-OpenNorm does not eliminate fuzziness. It makes fuzziness **explicit, dated, and
-scheduled for review** rather than silently accumulating unnoticed.
+| **Resolved** | `*distribute*` | Defined in taxonomy | Verified against taxonomy |
+| **Fuzzy** | `~~reasonable~~` | Intentionally flexible | Warning issued |
+| **Undefined** | `distribute` (plain) | Not declared anywhere | Hard error in final mode |
 
 ### 2.4 Warnings vs Errors
 
 ```
 ERROR   — the document is structurally broken
-          must be resolved before finalisation
-          example: undefined term used as a condition
-          example: fuzzy term not declared in § Known Ambiguities
-          example: broken internal reference
-          example: permission and prohibition of the same action
+          must be resolved before finalization
+          example: undefined term, contradiction detected
 
 WARNING — the document is valid but has known limitations
           human judgment required at point of application
+          example: computed variable has no type declaration
           example: no jurisdiction declared
-          example: undecidable case in formal verification
-          example: framework conflict between imported packages
-
-INFO    — context that aids interpretation
-          example: historical exploit this provision closes
-          example: compatibility note with another document
-          example: no amendment procedure declared
 ```
-
-### 2.5 The Translation Gap Principle
-
-The pipeline is:
-
-```
-Natural Language → [Human interprets] → OpenNorm encoding → [Lean 4 proves] → Verified
-```
-
-Lean 4 verifies the second arrow with mathematical certainty. The first arrow —
-the human encoding of natural language into formal terms — is where interpretation
-happens and where errors are possible. This gap cannot be eliminated by any
-formal system.
-
-OpenNorm addresses the translation gap through the open source model: the encoding
-is a public act. If "distribute" is encoded incorrectly, anyone can see the encoding,
-propose a correction, and open a pull request. Wrong encodings cannot hide
-permanently in a transparent system.
-
-**The formal layer does not claim to be law. It claims to be a consistency checker
-for documents that humans write and humans enforce.**
-
-Every report generated by OpenNorm carries:
-
-> *This report was generated by OpenNorm. It is not legal advice. The .md source
-> document is the authoritative instrument. Lean 4 output is a consistency
-> verification aid.*
-
-### 2.6 No Syntax Beyond Standard Markdown
-
-The only OpenNorm-specific conventions are:
-
-- `*italics*` for resolved terms — reads as emphasis, is a stdlib reference
-- `~~strikethrough~~` for fuzzy terms — reads as uncertain, is a formal declaration
-- `**bold label:**` for fields — reads as a definition list, is a formal field
-- Indented bullet lists for exceptions — reads as sub-points, is a priority chain
-
-Everything else is standard Markdown. Documents render correctly on GitHub, in
-any Markdown editor, in any system that accepts Markdown. The formalism is
-invisible in the rendered output.
 
 ---
 
 ## 3. Architecture Overview
 
-### 3.1 Infrastructure vs. Documents: The Critical Boundary
+### 3.1 The Three-Layer System
 
-OpenNorm enforces a strict architectural boundary between infrastructure and documents:
-
-**Infrastructure Layer (CAN contain Lean code)**
-- `lean/core.lean` - Foundational deontic axioms (hand-written, minimal)
-- `stdlib/frameworks/*.md` - Legal framework axioms (can have `## Lean4` sections)
-- `stdlib/templates/*.md` - Document templates with formal invariants
-- `stdlib/definitions/*.md` - Term definitions with types and lemmas
-- `stdlib/clauses/*.md` - Reusable clause fragments
-
-**Who writes:** System maintainers, formal methods experts, stdlib curators
-
-**Document Layer (MUST be pure markdown)**
-- `licences/*.md` - Software licenses (MIT, Apache, GPL, etc.)
-- `contracts/*.md` - Legal agreements and contracts
-- `regulations/*.md` - Regulatory frameworks (GDPR, HIPAA, etc.)
-- `charters/*.md` - Organizational governance documents
-
-**Who writes:** Legal drafters, compliance officers, community members
-
-**The Rule:** Documents use `*terms*` from stdlib but NEVER write Lean code.
-The transpiler generates all Lean proofs from pure markdown structure.
-
-**Enforcement:** Error E070 blocks any Lean code (`## Lean4` sections or ` ```lean4` blocks)
-in document directories. This ensures legal drafters never need Lean expertise.
-
-### 3.2 The Full Pipeline
+OpenNorm separates legal documents into three distinct layers:
 
 ```
-Input: document.md
-        ↓
-┌──────────────────────────────────────┐
-│  STAGE 0: STDLIB LOADING             │
-│  Load frameworks in dependency order │
-│  Load definition manifests           │
-│  Load clause dependencies            │
-│  Generate preamble.lean (output)     │
-│  Generate definitions.lean (output)  │
-└──────────────────────────────────────┘
-        ↓
-┌──────────────────────────────────────┐
-│  STAGE 1: RUST PARSER                │
-│  pest grammar → AST                  │
-│  Errors: malformed syntax            │
-└──────────────────────────────────────┘
-        ↓
-┌──────────────────────────────────────┐
-│  STAGE 2: RUST CHECKER               │
-│  Template conformance                │
-│  Term classification                 │
-│  Reference resolution                │
-│  Import and pin validation           │
-│  Structural invariants               │
-│  Conflict detection                  │
-│  Clause fuzzy term inheritance       │
-│  Errors: structural problems         │
-└──────────────────────────────────────┘
-        ↓
-┌──────────────────────────────────────┐
-│  STAGE 3: RUST TRANSPILER            │
-│  AST → document.lean (output)        │
-│  Deontic propositions                │
-│  Priority chains from indentation    │
-│  sorry stubs for fuzzy terms only    │
-└──────────────────────────────────────┘
-        ↓
-┌──────────────────────────────────────┐
-│  STAGE 4: LEAN 4 COMPILER            │
-│  Subprocess invocation               │
-│  Type checking                       │
-│  Contradiction detection             │
-│  Proof verification                  │
-│  sorry inventory                     │
-└──────────────────────────────────────┘
-        ↓
-┌──────────────────────────────────────┐
-│  STAGE 5: REPORT BUILDER             │
-│  Translates all stage outputs        │
-│  into unified human report           │
-│  Output: document_report.md          │
-└──────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  LAYER 1: NORMATIVE LAYER (Hohfeldian Norms)          │
+│  - Rights, duties, privileges, powers                   │
+│  - Exception hierarchies                                │
+│  - Jurisdiction constraints                             │
+│  - Validated by Z3 SMT solver                          │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  LAYER 2: OPERATIONAL LAYER (Procedures)               │
+│  - Computational procedures                             │
+│  - Case expressions and conditions                      │
+│  - Dimensional analysis with Unitful                    │
+│  - Type-checked calculations                            │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────┐
+│  LAYER 3: IMPLEMENTATION LAYER (Code Generation)       │
+│  - OpenFisca Python code                                │
+│  - YAML parameter files                                 │
+│  - Dependency graphs                                    │
+│  - Executable tax simulations                           │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 Repository Structure
+### 3.2 Parsing Pipeline
 
+The following flowchart shows the complete OpenNorm document parsing and validation pipeline, organized by the three architectural layers:
+
+```mermaid
+flowchart TD
+    Start([Document Path]) --> Load[Load Markdown File]
+    
+    subgraph Normative["NORMATIVE LAYER - Syntax & Semantics Validation"]
+        Load -->|Markdown AST| Manifest[Parse Manifest<br/>& Imports]
+        Manifest -->|Manifest + Import List| ParseTax[Parse & Merge<br/>Taxonomies]
+        ParseTax -->|4 Taxonomies<br/>Entity, Role, Action, Object| ParseNorms[Parse Norms<br/>Hohfeldian Positions]
+        ParseNorms -->|Norm List| ValidateNorms[Validate Norms<br/>& Exception Hierarchy]
+        
+        Manifest -.->|Error| ErrNorm
+        ParseTax -.->|Error| ErrNorm
+        ParseNorms -.->|Error| ErrNorm
+        ValidateNorms -.->|Error| ErrNorm
+    end
+    
+    ValidateNorms -->|Validated Norms| NormResult[✅ Normative Layer Complete<br/>OpenNorm Syntax Verified]
+    ErrNorm[❌ Normative Errors<br/>Invalid syntax, undefined terms,<br/>taxonomy conflicts]
+    
+    subgraph Operational["OPERATIONAL LAYER - Type & Dimensional Validation"]
+        NormResult --> ParseProc[Parse Procedures<br/>Layer 2]
+        ParseProc -->|Procedure ASTs| BuildIR[Build Intermediate<br/>Representation]
+        BuildIR -->|DocumentIR| DimAnalysis[Dimensional Analysis<br/>Type Checking]
+        
+        ParseProc -.->|Error| ErrOp
+        BuildIR -.->|Error| ErrOp
+        DimAnalysis -.->|Error| ErrOp
+    end
+    
+    DimAnalysis -->|Type-Checked IR| OpResult[✅ Operational Layer Complete<br/>Variable types & taxonomy verified]
+    ErrOp[❌ Operational Errors<br/>Type mismatches, unit errors,<br/>undefined variables]
+    
+    subgraph Implementation["IMPLEMENTATION LAYER - Code Generation & Verification"]
+        OpResult --> SMTLower[SMT Translation<br/>to Z3]
+        SMTLower -->|Z3 Assertions| SMTValidate[Z3 Solver<br/>Satisfiability Check]
+        
+        SMTLower -.->|Error| ErrImpl
+        SMTValidate -.->|UNSAT| ErrImpl
+    end
+    
+    SMTValidate -->|SAT| ImplResult[✅ Implementation Complete<br/>Logical consistency verified]
+    ErrImpl[❌ Implementation Errors<br/>Translation failed,<br/>contradictions detected]
+    
+    ImplResult --> CodeGen{Generate Code?}
+    CodeGen -->|Yes| GenCode[Generate OpenFisca<br/>Python, YAML, Graphs]
+    CodeGen -->|No| End([Complete])
+    GenCode -->|Generated Code| End
+    GenCode -.->|Error| ErrImpl
+    
+    ErrNorm --> End
+    ErrOp --> End
+    ErrImpl --> End
+    
+    style Start fill:#e1f5ff
+    style End fill:#e1f5ff
+    style NormResult fill:#d4edda
+    style OpResult fill:#d4edda
+    style ImplResult fill:#d4edda
+    style ErrNorm fill:#f8d7da
+    style ErrOp fill:#f8d7da
+    style ErrImpl fill:#f8d7da
+    style Normative fill:#fff9e6,stroke:#ffc107,stroke-width:3px
+    style Operational fill:#e8f5e9,stroke:#4caf50,stroke-width:3px
+    style Implementation fill:#e3f2fd,stroke:#2196f3,stroke-width:3px
 ```
-opennorm/
-├── Cargo.toml
-├── src/
-│   ├── main.rs              ← CLI entry point
-│   ├── openlex.pest         ← the grammar (authoritative format spec)
-│   ├── parser.rs            ← pest → AST
-│   ├── ast.rs               ← AST type definitions
-│   ├── checker.rs           ← structural validation
-│   ├── resolver.rs          ← term, import, and clause resolution
-│   ├── transpiler.rs        ← AST → Lean 4
-│   ├── report.rs            ← report generation
-│   ├── bpmn.rs              ← BPMN 2.0 reader (Phase 2)
-│   ├── lsp.rs               ← LSP server mode
-│   └── query.rs             ← document index and queries
-├── stdlib/                  ← see § 5
-│   ├── frameworks/
-│   ├── templates/
-│   ├── definitions/
-│   └── clauses/
-├── licenses/
-│   └── mit.md               ← MVP: MIT License in OpenNorm
-├── regulations/
-│   └── gdpr.md              ← Phase 2: GDPR in OpenNorm
-├── tests/
-│   ├── contradiction.md     ← deliberately broken, must fail
-│   ├── mit_test.lean        ← generated, verified
-│   └── gdpr_compliance/     ← BPMN test processes
-└── exploit_db/
-    └── mit_saas_loophole.md ← known gap as test case
-```
 
-### 3.3 Technology Decisions
+**Three-Layer Pipeline:**
 
-| Component | Technology | Rationale |
-|---|---|---|
-| Parser | Rust + pest | PEG grammars are unambiguous by definition. Aligned with OpenNorm's core purpose. |
-| Checker | Rust | Same binary as parser. No language bridge. Ships as a single executable. |
-| Formal verification | Lean 4 | Modern syntax, Mathlib, excellent DSL-building. sorry workflow maps cleanly to fuzzy terms. |
-| Format | Markdown | Universal rendering. Legal scholars can read it. Renders on GitHub. |
-| LSP | Standard LSP protocol | Works in VS Code, Neovim, Zed. No custom editor plugin needed. |
-| BPMN reader | Rust (xml parsing) | BPMN 2.0 is well-specified XML. Lanes → actors. Tasks → actions. |
+### Layer 1: Normative Layer
 
-**Why no hand-written Lean 4:** every `.lean` file in the repository is generated
-by the transpiler from a `.md` source. This is a hard constraint. The stdlib
-framework files contain `## Lean4` sections with raw Lean 4 code blocks, but they
-are content inside `.md` files — the transpiler extracts and assembles them. A
-contributor editing the formal layer edits `.md` files. They never touch generated
-`.lean` files directly.
+**Purpose:** Validate OpenNorm syntax and semantic correctness
 
-**Why pest over ANTLR:** PEG grammars used by pest are unambiguous by construction —
-the first matching rule always wins deterministically. For a tool whose purpose is
-to eliminate ambiguity in documents, the parser itself must be incapable of ambiguity.
+**Steps:**
 
-**Why Lean 4 over Coq:** Lean 4 has more readable generated code, better
-metaprogramming for DSL construction, active community growth, and Mathlib.
-The `sorry` placeholder workflow cleanly maps to OpenNorm's fuzzy term concept.
-Generated code must remain auditable — readability matters.
+1. **Load & Parse Manifest** → Returns: Manifest metadata + import list
+2. **Parse & Merge Taxonomies** → Returns: 4 merged taxonomies (Entity, Role, Action, Object)
+3. **Parse Norms** → Returns: List of Hohfeldian norms with positions
+4. **Validate Norms** → Returns: Validated norms with exception hierarchy
+
+**Output:** ✅ OpenNorm syntax verified, all terms defined, exception hierarchy valid
+
+**Errors:** Invalid syntax, undefined terms, taxonomy conflicts, circular imports
 
 ---
 
-## 4. The OpenNorm Document Format
+### Layer 2: Operational Layer
 
-### 4.1 Document Anatomy
+**Purpose:** Validate variable types and dimensional consistency
+
+**Steps:**
+
+1. **Parse Procedures** → Returns: Procedure ASTs from Layer 2 sections
+2. **Build IR** → Returns: Complete DocumentIR with all components
+3. **Dimensional Analysis** → Returns: Type-checked IR with validated units
+
+**Output:** ✅ Variable types verified, taxonomy respected, unit consistency validated
+
+**Errors:** Type mismatches, incompatible units, undefined variables, missing type declarations
+
+---
+
+### Layer 3: Implementation Layer
+**Purpose:** Translate to executable code and verify logical consistency
+
+**Steps:**
+1. **SMT Translation** → Returns: Z3 assertions representing norms
+2. **Z3 Solver** → Returns: SAT (consistent) / UNSAT (contradictions) / UNKNOWN
+3. **Code Generation** (optional) → Returns: OpenFisca Python, YAML parameters, dependency graphs
+
+**Output:** ✅ Document translated to code, logical consistency verified
+
+**Errors:** Translation failures, contradictions detected (Hohfeldian opposites), code generation errors
+
+---
+
+## 4. The Three-Layer System
+
+### 4.1 Layer 1: Normative Layer (Norms)
+
+**Purpose:** Express legal relationships using Hohfeldian positions.
+
+**Syntax:**
+
+```markdown
+### Rule Title
+
+*Actor* **Position** *action* *object* to/from/by/over *Counterparty*
+```
+
+**Example:**
+
+```markdown
+### Deduction Right
+
+*Propriétaire* **a le droit de** *déduire* *Déficit Foncier* à *Administration Fiscale*
+```
+
+**Validation:** Z3 SMT solver checks for:
+
+- Contradictions (simultaneous Right and NoRight)
+- Subsumption relationships via taxonomy
+- Exception hierarchy consistency
+- Jurisdiction constraints
+
+### 4.2 Layer 2: Operational Layer (Procedures)
+
+**Purpose:** Define computational procedures with type-checked calculations.
+
+**Syntax:**
+
+```markdown
+## *Variable Name*
+
+> Description
+
+*Variable* = expression
+```
+
+**Example:**
+
+```markdown
+## *Déficit Agricole Imputable*
+
+> Montant du déficit agricole imputable sur le revenu global
+
+*Déficit Agricole Imputable* = min(*Déficit Agricole*, *Seuil Revenu Agricole*)
+```
+
+**Validation:** Dimensional analysis checks:
+
+- Unit consistency (EUR + EUR = EUR, not EUR + years)
+- Type declarations in taxonomy
+- Variable references are defined
+
+### 4.3 Layer 3: Implementation Layer (Code Generation)
+
+**Purpose:** Generate executable code from validated procedures.
+
+**Outputs:**
+
+- **OpenFisca Python** — Tax calculation variables
+- **YAML parameters** — Time-varying parameters
+- **Dependency graphs** — Mermaid flowcharts
+
+**Possible outputs:**
+
+- **Solidity** - Smart Contracts
+- **Catala** - Legal Tax code
+
+**Example Generated OpenFisca Code:**
+
+```python
+class deficit_agricole_imputable(Variable):
+    value_type = float
+    entity = FoyerFiscal
+    definition_period = YEAR
+    label = "Montant du déficit agricole imputable"
+    
+    def formula(foyer_fiscal, period, parameters):
+        deficit = foyer_fiscal('deficit_agricole', period)
+        seuil = foyer_fiscal('seuil_revenu_agricole', period)
+        return min_(deficit, seuil)
+```
+
+---
+
+## 5. Technology Stack
+
+### 5.1 Core Technologies
+
+| Component | Technology | Rationale |
+|---|---|---|
+| **Language** | Julia 1.12+ | Multiple dispatch, metaprogramming, scientific computing |
+| **Parser** | CommonMark.jl | Native markdown parsing, fast, type-safe |
+| **Formal Verification** | Z3 SMT Solver | Industry-standard, handles quantifiers and theories |
+| **Type Checking** | Unitful.jl | Dimensional analysis with compile-time checking |
+| **Code Generation** | Julia metaprogramming | Direct AST manipulation, clean code generation |
+| **Target Platform** | OpenFisca | Standard for tax/benefit microsimulation |
+| **Format** | Markdown | Universal, readable, version-controllable |
+
+### 5.2 Why Julia?
+
+- **Multiple dispatch** — Natural fit for AST traversal and code generation
+- **Type system** — Strong typing with parametric types for IR nodes
+- **Metaprogramming** — Powerful macro system for DSL construction
+- **Scientific computing** — Unitful.jl provides dimensional analysis
+- **Performance** — JIT compilation for fast parsing and validation
+- **Interop** — Easy integration with Z3 via Z3.jl
+
+### 5.3 Why Z3?
+
+- **SMT theories** — Supports quantifiers, uninterpreted functions, datatypes
+- **Proven** — Used in Microsoft, Amazon, and academic formal verification
+- **Decidable fragments** — Can prove satisfiability for many legal constraints
+- **Counterexamples** — When unsatisfiable, provides concrete contradiction
+- **Active development** — Regular updates and bug fixes
+
+---
+
+## 6. Quick Start
+
+### 6.1 Installation
+
+**Prerequisites:**
+- Julia 1.12 or higher
+- Git
+
+**Install Julia:**
+
+```bash
+# macOS (via Homebrew)
+brew install julia
+
+# Linux (via juliaup)
+curl -fsSL https://install.julialang.org | sh
+
+# Windows (via juliaup)
+winget install julia -s msstore
+```
+
+**Clone and Setup:**
+
+```bash
+# Clone the repository
+git clone https://github.com/atthom/opennorm.git
+cd opennorm
+
+# Install dependencies
+julia --project=. -e 'using Pkg; Pkg.instantiate()'
+```
+
+### 6.2 Basic Usage
+
+**Validate a document:**
+
+```bash
+julia --project=. src/opennorm.jl documents/articles/CGI.Art.156.md
+```
+
+**Generate OpenFisca code:**
+
+```bash
+julia --project=. src/opennorm.jl documents/articles/CGI.Art.156.md \
+  --openfisca output.py
+```
+
+**Generate with dependency graph:**
+
+```bash
+julia --project=. src/opennorm.jl documents/articles/CGI.Art.156.md \
+  --openfisca output.py --graph
+```
+
+### 6.3 Run Tests
+
+```bash
+# Run all tests
+julia --project=. test/runtests.jl
+
+# Run specific test category
+julia --project=. -e 'using Test; include("test/parser/test_manifest.jl")'
+```
+
+---
+
+## 7. Import System & Modular Architecture
+
+### 7.1 Purpose: Composable Legal Documents
+
+OpenNorm's import system enables legal documents to be decomposed into logical, maintainable modules. Rather than encoding an entire regulation in a single monolithic file, complex legal frameworks can be split into meaningful parts that can be independently developed, tested, and reused.
+
+### 7.2 Benefits of Modular Architecture
+
+**Document Decomposition**
+
+- Break large legal documents into coherent, focused modules
+- Each module handles a specific aspect (e.g., agricultural deficits, business deficits)
+- Easier to understand, maintain, and update individual components
+
+**Reusable Components**
+
+- Import pre-encoded jurisdictions (e.g., `FR.Constitution`, `EU.Regulation`)
+- Reuse common taxonomies across multiple documents
+- Share standard definitions from stdlib frameworks
+
+**Dependency Networks**
+
+- Files can import other files, creating rich dependency graphs
+- Transitive imports automatically resolved
+- Circular dependency detection prevents logical loops
+
+**Version Management**
+
+- Semantic versioning ensures compatibility (`@3.0`, `@2.1`)
+- Pin specific versions for stability
+- Track which version of dependencies a document relies on
+
+### 7.3 Real-World Example: CGI Article 156
+
+The French tax code Article 156 demonstrates modular architecture:
+
+```markdown
+**Package:** cgi.art156
+**Version:** 3.0
+**Imports:**
+- stdlib/frameworks/universal/core@2.0
+- CGI.Art.156.deficits-agricoles@3.0
+- CGI.Art.156.deficits-bic@3.0
+- CGI.Art.156.deficits-bnc@3.0
+- CGI.Art.156.deficits-fonciers@3.0
+- CGI.Art.156.deficits-capitaux@3.0
+- CGI.Art.156.charges-deductibles@3.0
+```
+
+**Structure:**
+```
+CGI.Art.156.md (orchestrator)
+├── stdlib/frameworks/universal/core@2.0
+│   └── Common taxonomies, grundnorm, jurisdiction hierarchy
+├── CGI.Art.156.deficits-agricoles@3.0
+│   └── Agricultural deficit rules, carryforward logic
+├── CGI.Art.156.deficits-bic@3.0
+│   └── Business income deficit rules
+├── CGI.Art.156.deficits-bnc@3.0
+│   └── Non-commercial profession deficit rules
+├── CGI.Art.156.deficits-fonciers@3.0
+│   └── Real estate deficit rules
+├── CGI.Art.156.deficits-capitaux@3.0
+│   └── Capital gains deficit rules
+└── CGI.Art.156.charges-deductibles@3.0
+    └── Deductible charges (pensions, insurance, etc.)
+```
+
+### 7.4 Import Resolution
+
+**Three Import Types:**
+
+1. **Stdlib imports** — Framework definitions
+
+   ```markdown
+   - stdlib/frameworks/universal/core@2.0
+   ```
+   Resolved from `stdlib/` directory
+
+2. **Relative imports** — Local modules
+
+   ```markdown
+   - CGI.Art.156.deficits-agricoles@3.0
+   ```
+   Resolved relative to current document
+
+3. **Absolute imports** — External packages
+
+   ```markdown
+   - /path/to/external/package@1.0
+   ```
+   Resolved from absolute path
+
+**Version Pinning:**
+
+- `@3.0` — Exact version match required
+- `@2.x` — Any 2.x version (future feature)
+- `@latest` — Most recent version (future feature)
+
+### 7.5 Taxonomy Merging
+
+When documents are imported, their taxonomies merge:
+
+**Base document (stdlib/core):**
+
+```markdown
+### Action Taxonomy
+- AnyAction
+  - Tax
+    - declare
+    - pay
+```
+
+**Importing document (CGI.Art.156):**
+
+```markdown
+### Action Taxonomy
+- AnyAction
+  - Tax
+    - deduct  ← Extends imported taxonomy
+    - impute  ← Extends imported taxonomy
+```
+
+**Merged result:**
+
+```markdown
+### Action Taxonomy
+- AnyAction
+  - Tax
+    - declare  (from stdlib)
+    - pay      (from stdlib)
+    - deduct   (from CGI.Art.156)
+    - impute   (from CGI.Art.156)
+```
+
+**Conflict Detection:**
+
+- If two imports define the same term differently → Error
+- If local definition conflicts with import → Error
+- Source tracking maintains provenance of each term
+
+### 7.6 Dependency Graph Validation
+
+The import system validates:
+
+✅ **No circular dependencies**
+
+```
+A imports B, B imports C, C imports A → ERROR
+```
+
+✅ **Version compatibility**
+
+```
+Document requires @3.0, but @2.5 found → ERROR
+```
+
+✅ **Import resolution**
+
+```
+Import path not found → ERROR
+```
+
+✅ **Taxonomy consistency**
+
+```
+Conflicting definitions across imports → ERROR
+```
+
+### 7.7 Benefits for Large-Scale Systems
+
+**Maintainability**
+
+- Update one module without touching others
+- Clear separation of concerns
+- Easier code review and testing
+
+**Reusability**
+
+- Common patterns encoded once, imported many times
+- Jurisdiction hierarchies shared across documents
+- Standard taxonomies prevent reinventing terms
+
+**Collaboration**
+
+- Different teams work on different modules
+- Clear interfaces between components
+- Version control tracks changes per module
+
+**Scalability**
+
+- Add new modules without modifying existing ones
+- Compose complex systems from simple parts
+- Test modules independently before integration
+
+---
+
+## 8. The OpenNorm Document Format
+
+### 8.1 Document Anatomy
 
 Every OpenNorm document has the same structure:
 
 ```markdown
 # Document Title
 
-> Human-readable description. Ignored by parser. Rendered for readers.
+> Human-readable description
 
-**OpenNorm:** 0.1
-**ID:** unique-identifier
+**Package:** unique-identifier
+**Package-type:** ruling | stdlib | scenario
 **Version:** 1.0
-**Template:** license
-**Framework:** common-law        ← optional, loads framework axioms
-**Status:** draft
+**Status:** draft | review | final
 **Imports:**
-- stdlib/clauses/warranty/as-is@1.0
-- stdlib/definitions/actions/software@1.0
+- package/path@version
 
 ---
 
 ## Section Name
 
-**Field:** value
-**Another Field:** *resolved-term*
+### Rule Title
 
-**List Field:**
-- *resolved-term*
-- ~~fuzzy-term~~
-- plain term  ← will produce error or warning
-
-  - exception to parent  ← higher priority in defeasibility chain
-
-> Annotation in blockquote. Human readable. Ignored by parser.
+*Actor* **Position** *action* *object* to *Counterparty*
+when *condition*
 
 ---
 
-## Known Ambiguities
+## LAYER 2: OPERATIONAL
 
-> Fuzzy terms must be declared here with context.
+### *Variable Name*
 
-- **fuzzy-term** — reason this is intentionally flexible
-  **Review trigger:** when contested in legal proceedings
+> Description
+
+*Variable* = expression
 ```
 
-### 4.2 Field Types
+### 8.2 Manifest Fields
 
-**Scalar field:**
-```markdown
-**Version:** 1.0
-```
+| Field | Required | Possible Values | Description |
+|---|---|---|---|
+| `**Package:**` | Yes | Unique identifier | Package identifier (e.g., `cgi.art156`) |
+| `**Package-type:**` | Yes | `ruling`, `stdlib`, `scenario` | Type of document package |
+| `**Version:**` | Yes | Semantic version | Version number (e.g., `3.0`) |
+| `**Status:**` | No | `draft`, `review`, `final` | Document maturity status |
+| `**Imports:**` | No | List of package@version | Dependencies with version pinning |
+| `**Jurisdiction:**` | No | Jurisdiction identifier | Legal jurisdiction (e.g., `FR.Loi`) |
 
-**Term field:**
-```markdown
-**To:** any *Person*
-```
+### 8.3 Taxonomy Sections
 
-**List field:**
-```markdown
-**Permitted:**
-- *use*
-- *copy*
-- *distribute*
-```
-
-**Defeasible list** — indentation encodes priority:
-```markdown
-**Voting rights:**
-- *citizen*                          ← priority 1 (base rule)
-  - active conviction → none         ← priority 2 (defeats base)
-    - sentence served → *citizen*    ← priority 3 (defeats exception)
-```
-
-The indentation depth directly becomes the priority integer in the transpiled
-Lean 4. No separate priority declaration is needed. The document structure is
-the priority structure.
-
-### 4.3 Reference Types
-
-Three URI schemes, each treated differently by the checker:
+Four taxonomies organize terms:
 
 ```markdown
-[Apache-2.0](opennorm://licenses/apache2@2.0)
-```
-Resolved and formally checked. Document must exist in registry. Permissions are
-merged and checked for contradictions across the combined document.
+### Entity Taxonomy
+- Person
+  - Natural Person
+  - Legal Person
 
-```markdown
-[French Civil Code Art. 1128](legal://fr/code-civil/art-1128)
-```
-Resolved for existence only. Framework is known. Compliance is asserted, not proved.
-Checker warns if framework definitions conflict with document terms.
+### Role Taxonomy
+- Taxpayer
+  - Individual Taxpayer
+  - Corporate Taxpayer
 
-```markdown
-[§ Obligations](#obligations)
-```
-Resolved locally. The anchor must exist in this document. A broken internal
-reference is a hard error.
+### Action Taxonomy
+- Financial Actions
+  - pay
+  - deduct
+  - declare
 
-### 4.4 Document Modes
-
-```
-DRAFT    ← being written
-         undefined terms are warnings, not errors
-         missing sections are suggestions, not failures
-         contradictions are flagged but do not block
-
-REVIEW   ← being checked before ratification
-         full validation runs
-         all errors must be resolved
-         all imports must resolve
-
-FINAL    ← ratified
-         all imports must be pinned to explicit versions
-         no draft markers remain
-         version is frozen
+### Object Taxonomy
+- Tax Objects
+  - Income
+  - Deduction
+  - Deficit
 ```
 
 ---
 
-## 5. The Stdlib
+## 9. Hohfeldian Position System
 
-The stdlib is the shared vocabulary and structural layer. It is composed of four
-distinct layers with different roles, different audiences, and different
-contribution dynamics.
+### 9.1 The Eight Positions
 
-> Every stdlib file is an OpenNorm document. The stdlib eats its own cooking.
-> All stdlib packages are formally verified before being marked stable.
-> Dissent is recorded permanently. Contradictions block merge.
+OpenNorm uses Wesley Hohfeld's relational theory of legal positions. Each position is a combination of three binary variables:
 
-### 5.1 The Four Layers
+| Position | Syntax | Correlative | Opposite | Order |
+|---|---|---|---|---|
+| **Right** | `**a le droit de**` | Subject | Positive | First |
+| **Duty** | `**doit**` | Counterparty | Positive | First |
+| **Privilege** | `**a le privilège de**` | Subject | Negative | First |
+| **NoRight** | `**n'a pas le droit de**` | Counterparty | Negative | First |
+| **Power** | `**a le pouvoir de**` | Subject | Positive | Second |
+| **Liability** | `**est soumis à**` | Counterparty | Positive | Second |
+| **Disability** | `**n'a pas le pouvoir de**` | Subject | Negative | Second |
+| **Immunity** | `**a l'immunité de**` | Counterparty | Negative | Second |
 
-```
-stdlib/
-│
-├── frameworks/        ← Layer 1: logical and legal axioms
-│   └── ...
-│
-├── templates/         ← Layer 2: structural schemas
-│   └── ...
-│
-├── definitions/       ← Layer 3: term meanings and Lean 4 types
-│   └── ...
-│
-└── clauses/           ← Layer 4: reusable substantive fragments
-    └── ...
-```
+**Binary Variables:**
 
-**Layer 1 — Frameworks** answer: *what structural axioms hold in this legal context?*
+- **Correlative:** Subject (holder) vs Counterparty (other party)
+- **Opposite:** Positive (affirmative) vs Negative (denial)
+- **Order:** First (claim-rights) vs Second (power-rights)
 
-**Layer 2 — Templates** answer: *what must this document contain to be a valid
-instance of this document type?*
+### 9.2 Position Operators
 
-**Layer 3 — Definitions** answer: *what does this term mean precisely enough to
-use in a formal proof?*
+Three operators transform positions, corresponding to the binary variables:
 
-**Layer 4 — Clauses** answer: *how do people typically say this, tested and
-ready to use?*
+- **C (Correlative)** — Swap Subject ↔ Counterparty
+- **O (Opposite)** — Flip Positive ↔ Negative
+- **E (Order Change)** — Change First ↔ Second
 
-### 5.2 Layer 1 — Frameworks
+These form a Z₂³ group, ensuring mathematical completeness.
 
-Frameworks encode structural axioms that hold across entire document classes
-within a given legal system. They are not about individual terms — they are
-about how the legal system as a whole works.
+### 9.3 Exception Hierarchies
 
-The dependency order is always: universal → general framework → specific framework.
-
-```
-stdlib/frameworks/
-├── universal/
-│   └── core.md             ← implicit import, always loaded first
-├── common-law/
-│   └── contracts.md
-├── civil-law/
-│   └── contracts.md
-├── eu/
-│   ├── gdpr.md
-│   └── contracts.md
-└── international/
-    └── uncitral.md
-```
-
-**`frameworks/universal/core.md`** is the foundational file. It defines the
-deontic modalities (Permitted, Obligated, Forbidden), their core consistency
-axioms, and the defeasibility structure. It is the only package that is
-implicitly imported by every document — it is never declared, always present.
-It is the replacement for the hand-written `Deontic.lean`.
-
-It has the highest review threshold in the entire stdlib. A change here
-potentially invalidates every prior verification.
-
-**Framework files contain a `## Lean4` section** with the Lean 4 axioms that
-the transpiler extracts to generate `preamble.lean`. They also contain a
-`## Meaning` section with plain-language explanations readable by a non-programmer.
-
-Example structure of a framework file:
+Exceptions use depth-based position flipping:
 
 ```markdown
-# stdlib / frameworks / universal / core
+### Base Rule
 
-**OpenNorm:** 0.1
-**Package-type:** framework
-**Package:** frameworks.universal.core
-**Version:** 1.0
-**Extends:** none
-**Depends-on:** none
+*Actor* **a le droit de** *action* *object* à *Counterparty*
 
----
-
-## Manifest
-
-**Package-type:** framework
-**Implicit-import:** true
-**Axioms:**
-- Permitted
-- Obligated
-- Forbidden
-- deontic_consistency
-- obligation_permits
-- defeasibility
-
----
-
-## Permitted
-
-**Meaning:** An actor is allowed to perform an action. Permission is
-the absence of prohibition. It does not imply obligation.
-
-**Lean4:**
-```lean4
-axiom Permitted (actor : α) (action : β) : Prop
+  exception de #base-rule
+  when *condition*
 ```
 
----
+The exception automatically gets position O(Right) = NoRight.
 
-## deontic_consistency
+### 9.4 Norm Anatomy
 
-**Meaning:** Nothing can be simultaneously permitted and forbidden.
-A document that produces this contradiction fails formal verification.
+Every OpenNorm norm is composed of required fields and optional modifiers:
 
-**Lean4:**
-```lean4
-axiom deontic_consistency {α β} (a : α) (x : β) :
-  ¬(Permitted a x ∧ Forbidden a x)
+```mermaid
+flowchart LR
+    subgraph Core["Required — Core Norm Tuple"]
+        Subject["*Subject*\n(Role Taxonomy)"]
+        Verb["**Hohfeldian Verb**\n→ determines Position"]
+        Action["*action*\n(Action Taxonomy)"]
+        Object["*object*\n(Object Taxonomy)"]
+        Counterparty["*Counterparty*\n(Role Taxonomy)"]
+
+        Subject --> Verb --> Action --> Object --> Counterparty
+    end
+
+    subgraph Modifiers["Optional — Modifiers"]
+        Exception["exception de #ref\n→ Position = O(parent.position)\n   depth + 1"]
+        Overrules["overrules #ref\n→ lex specialis precedence\n   same depth"]
+        Condition["when *condition*\n→ boolean guard\n   over taxonomy terms"]
+    end
+
+    Core --> Exception
+    Core --> Overrules
+    Core --> Condition
+
+    Exception --> NormIR["Norm IR\n(Intermediate Representation)"]
+    Overrules --> NormIR
+    Condition --> NormIR
+    Core --> NormIR
+
+    style Core fill:#fff9e6,stroke:#ffc107,stroke-width:2px
+    style Modifiers fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style NormIR fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style Exception fill:#e3f2fd
+    style Overrules fill:#e3f2fd
+    style Condition fill:#e3f2fd
 ```
 
-**Dissent:** none on record
-```
-
-**Framework axioms for legal systems** encode structural truths that hold across
-all documents in that legal system:
-
-```
-common-law/contracts.md:
-  consideration_required — every valid contract requires consideration
-  implied_term_possible  — courts may find terms the parties never wrote
-  parol_evidence_rule    — external evidence cannot contradict written terms
-
-civil-law/contracts.md:
-  validity_conditions    — capable parties, certain object, lawful cause
-  literal_interpretation — contracts interpreted against their written text
-
-eu/gdpr.md:
-  lawful_basis_required  — every processing must have exactly one lawful basis
-  purpose_limitation     — data may not be processed beyond declared purpose
-  erasure_obligation     — controller must erase on valid request within 30 days
-  data_minimisation      — data collected must be necessary for declared purpose
-```
-
-When a document declares `**Framework:** common-law`, the transpiler loads
-`frameworks/common-law/contracts.md` and its axioms are applied during
-formal verification. A process checked under GDPR loads `frameworks/eu/gdpr.md`.
-
-If two frameworks are loaded simultaneously and their axioms contradict,
-the Lean 4 compiler detects the contradiction. This is error E040:
-incompatible frameworks.
-
-### 5.3 Layer 2 — Templates
-
-A template defines the structural requirements for a document type. It answers:
-does this document have the right sections, the right required fields, and does
-it satisfy the structural invariants for its type?
-
-Templates have nothing to do with term meaning. They are purely structural.
-
-```
-stdlib/templates/
-├── license.md
-├── contract.md
-├── charter.md
-└── dao.md
-```
-
-Anyone can write a new template. Custom templates follow the same format and
-can be published and imported like any other stdlib package.
-
-Template files use `**Package-type:** template` and contain:
-- `## Required Sections` — with required fields per section
-- `## Optional Sections`
-- `## Structural Invariants` — machine-checkable rules
-- `## Warnings` — diagnostic codes issued for missing optional elements
-
-### 5.4 Layer 3 — Definitions
-
-Definitions are the load-bearing layer. A mistake here propagates everywhere
-the term is used. Definitions have the strictest review process after
-universal framework axioms.
-
-```
-stdlib/definitions/
-├── core/
-│   ├── actors.md           Person, Institution, RightsHolder, Licensor, ...
-│   ├── logic.md            conditional, unless, notwithstanding, ...
-│   └── time.md             duration, perpetual, upon, within, ...
-├── actions/
-│   ├── software.md         use, copy, modify, distribute, sublicense, sell, ...
-│   ├── financial.md        pay, transfer, refund, escrow, ...
-│   └── legal.md            assign, waive, indemnify, terminate, ...
-├── economics/
-│   └── core.md             free_of_charge, consideration, royalty, ...
-├── ip/
-│   └── copyright.md        copyright_notice, derivative_work, ...
-└── data/
-    └── gdpr.md             personal_data, data_subject, controller, ...
-                            lawful_basis, consent, legitimate_interests, ...
-```
-
-Each definition file contains:
-
-- `## Manifest` — surface forms mapped to canonical term ids, used by the checker
-  to recognise terms in document text
-- One section per defined term, each containing:
-  - `**Meaning:**` — human-readable definition
-  - `**Lean4:**` — the type declaration and/or axioms for the formal layer,
-    structured as `### Types` and `### Axioms` subsections
-  - `**Dissent:**` — recorded disagreements with the definition
-  - `**Review trigger:**` — condition under which the definition should be revisited
-
-The `## Manifest` section format:
-
-```markdown
-## Manifest
-
-- "distribute"      → distribute
-- "make available"  → distribute
-- "share"           → distribute
-- "run"             → use
-- "execute"         → use
-```
-
-Single-word terms are direct lookups. Multi-word surface forms use a sliding
-window over the token stream. When a term matches multiple packages the checker
-flags it as ambiguous and requests disambiguation in the local Definitions section.
-
-### 5.5 Layer 4 — Clauses
-
-Clauses are pre-written, vetted, formally-verified document fragments. They are
-composed entirely of defined terms. A drafter imports a clause rather than
-writing the same language from scratch.
-
-```
-stdlib/clauses/
-├── warranty/
-│   ├── as-is.md            standard no-warranty disclaimer
-│   ├── as-is-eu.md         EU consumer-law compliant variant
-│   └── limited.md          limited warranty for N days
-├── liability/
-│   ├── full-exclusion.md   total liability exclusion
-│   └── capped.md           liability capped at declared amount
-├── ip/
-│   ├── assignment.md       IP ownership transfer
-│   └── retention.md        licensor retains all IP
-├── jurisdiction/
-│   ├── us-general.md       Delaware/New York governing law
-│   ├── eu-general.md       GDPR-aware governing law
-│   └── neutral.md          UNCITRAL / ICC arbitration
-└── notice/
-    └── copyright-preservation.md   MIT-style notice obligation
-```
-
-Clause files use `**Package-type:** clause` and declare:
-- `**Depends:**` — which definition packages they require
-- `**Parameters:**` — values the importing document must supply (if any)
-- `## Clause Text` — the substantive content, using resolved and fuzzy terms
-- `## Known Ambiguities` — fuzzy terms declared within the clause
-
-**Fuzzy term inheritance:** when a document imports a clause, the clause's
-fuzzy terms are automatically inherited into the document's ambiguity record.
-The drafter does not need to re-declare them. The report shows both local
-and inherited ambiguities, clearly labelled. This is automatic — explicit
-manual acknowledgement is not required.
-
-**Import syntax in a document:**
-
-```markdown
-**Imports:**
-- stdlib/clauses/warranty/as-is@1.0
-
-## Waivers
-
-*(import: clauses/warranty/as-is)*
-```
-
-The checker resolves the import, inlines the clause's terms into the document's
-term index, and carries the clause's Known Ambiguities forward.
-
-### 5.6 Dependency and Contribution Dynamics
-
-```
-Layer 1 — Frameworks:  highest review threshold. Changes invalidate prior
-                        verifications. Universal core requires unanimity.
-                        Legal framework axioms require legal + Lean 4 expertise.
-
-Layer 2 — Templates:   moderate threshold. Wrong templates produce missing-field
-                        errors, not formal incorrectness. Domain experts can
-                        contribute without Lean 4 knowledge.
-
-Layer 3 — Definitions: high threshold, second only to universal framework.
-                        Version bumps trigger re-check of all dependent documents.
-                        Dissent system is load-bearing here.
-
-Layer 4 — Clauses:     moderate threshold. Must pass full pipeline checks before
-                        publication. Community naturally produces many variants
-                        (as-is-eu, as-is-saas, capped-10k-eur) without each
-                        requiring the scrutiny of a definition change.
-```
-
----
-
-## 6. The Parser — Rust + pest
-
-### 6.1 The Grammar File
-
-The `openlex.pest` grammar file is the authoritative specification of the
-OpenNorm document format. It is readable by non-programmers.
-
-```pest
-// openlex.pest — OpenNorm Grammar v0.1
-
-// ── Top Level ──────────────────────────────────────────────────
-document       =  { SOI ~ metadata_block ~ section* ~ EOI }
-metadata_block =  { field+ }
-section        =  { separator? ~ header ~ block* }
-block          =  { field | bullet_list | blockquote | prose_block | blank_line }
-
-// ── Structure ──────────────────────────────────────────────────
-header         =  { NEWLINE* ~ header_prefix ~ " "+ ~ header_text ~ NEWLINE }
-header_prefix  = @{ "#"+ }
-header_text    = @{ (!NEWLINE ~ ANY)+ }
-separator      =  { "---" ~ NEWLINE }
-blank_line     =  { NEWLINE+ }
-
-// ── Fields ─────────────────────────────────────────────────────
-field          =  { "**" ~ field_label ~ ":**" ~ " "* ~ field_value_inline? ~ NEWLINE
-                    ~ field_value_block? }
-field_label    = @{ (!(":**") ~ !"*" ~ ANY)+ }
-field_value_inline = { term_inline }
-field_value_block  = { bullet_list }
-
-// ── Prose blocks ───────────────────────────────────────────────
-// Prose contains free text that may include inline *term* and ~~term~~ markers.
-// Full prose term extraction is implemented in the checker via pattern scanning.
-prose_block    =  { prose_line+ }
-prose_line     =  { !("**" | "- " | "> " | "---" | "#") ~ (!NEWLINE ~ ANY)+ ~ NEWLINE }
-
-// ── Bullet Lists (indentation = priority) ──────────────────────
-bullet_list    =  { bullet+ }
-bullet         =  { indent_level ~ "- " ~ term_inline ~ NEWLINE ~ bullet* }
-indent_level   = @{ ("  ")* }    // length / 2 = priority integer
-
-// ── Blockquotes ────────────────────────────────────────────────
-blockquote     =  { blockquote_line+ }
-blockquote_line =  { "> " ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
-
-// ── Terms ──────────────────────────────────────────────────────
-term_inline    =  { resolved | fuzzy | plain_term }
-resolved       =  { "*" ~ term_word ~ "*" }           // stdlib reference
-fuzzy          =  { "~~" ~ term_word ~ "~~" }         // intentional flexibility
-plain_term     =  { term_word ~ (" " ~ term_word)* }  // undefined — error or warning
-
-term_word      = @{ ASCII_ALPHANUMERIC+ ~ ("_" ~ ASCII_ALPHANUMERIC+)* }
-
-// ── References ─────────────────────────────────────────────────
-ref_link       =  { "[" ~ ref_text ~ "](" ~ ref_uri ~ ")" }
-ref_text       = @{ (!"]" ~ ANY)+ }
-ref_uri        = @{ (!")" ~ ANY)+ }
-
-// ── Imports ────────────────────────────────────────────────────
-import_entry   = @{ import_path ~ ("@" ~ version_str)? }
-import_path    = @{ (ASCII_ALPHANUMERIC | "/" | "_" | "-" | ".")+ }
-version_str    = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)* }
-
-// ── Whitespace ─────────────────────────────────────────────────
-WHITESPACE     = _{ " " | "\t" }
-NEWLINE        = _{ "\r\n" | "\n" }
-```
-
-### 6.2 The AST
-
-```rust
-pub enum Term {
-    Resolved { name: String, package: Option<String>, version: Option<String> },
-    Fuzzy    { name: String, review_trigger: Option<String>, reason: Option<String> },
-    Undefined(String),
-}
-
-pub struct Field     { pub label: String, pub value: FieldValue, pub location: Location }
-pub struct Bullet    { pub term: Term, pub priority: usize, pub sub_bullets: Vec<Bullet> }
-pub struct Section   { pub kind: SectionKind, pub fields: Vec<Field>,
-                       pub bullets: Vec<Bullet>, pub prose: Vec<String>,
-                       pub annotations: Vec<String> }
-pub struct Import    { pub package: String, pub version: Option<String> }
-pub struct Document  { pub id: String, pub version: String, pub template: Option<String>,
-                       pub framework: Option<String>, pub status: DocumentStatus,
-                       pub imports: Vec<Import>, pub sections: Vec<Section>,
-                       pub known_fuzzies: Vec<KnownFuzzyTerm> }
-```
-
-### 6.3 Term Recognition — The Manifest System
-
-The stdlib packages carry a `## Manifest` section mapping surface forms to
-canonical term ids. The checker builds a recognition index from all imported
-manifests before term classification begins.
-
-**Auto-import flow:** the checker infers the minimum import set from all
-recognised terms and proposes it to the drafter during draft mode.
-Before finalisation every import must be explicitly pinned:
-
-```bash
-$ opennorm pin document.md
-# Locks all auto-resolved imports to current stable versions
-```
-
----
-
-## 7. The Checker
-
-### 7.1 Three Validation Passes
-
-**Pass 1 — Template conformance**
-Does the document structure match its declared template? Required sections
-present? Required fields within sections present? Structural invariants satisfied?
-This pass is purely structural. No term meaning is involved.
-
-**Pass 2 — Term resolution**
-Every `*resolved*` term is looked up against the manifest index built from
-imported definition packages. Every `~~fuzzy~~` term is verified to appear
-in § Known Ambiguities. Plain undefined terms produce errors in review/final
-mode, warnings in draft mode.
-
-**Pass 3 — Clause and reference integrity**
-For each imported clause, are all the clause's terms still resolved in the
-document's combined import set? Are the clause's fuzzy terms automatically
-inherited into the document's ambiguity record? Are all `opennorm://` references
-resolvable? Are all `#anchor` references pointing to existing sections?
-
-### 7.2 Conflict Detection
-
-The conflict vs provision distinction is what makes amendment review tractable.
-
-**Conflict** — the same actor is simultaneously permitted and forbidden the
-same action under the same conditions. Hard error. Must be resolved before merge.
-
-**Provision** — a new clause adds something the existing document is silent on.
-Not a conflict. Requires human judgment: is this intentional extension or scope creep?
-
-```
-Existing: distribute is permitted
-New:      distribute requires payment    ← CONFLICT  (E030)
-
-Existing: distribute is permitted
-New:      network_distribute is permitted  ← PROVISION (W030)
-```
-
-### 7.3 Diagnostic Codes
-
-```rust
-pub struct Diagnostic {
-    pub severity:   Severity,       // Error, Warning, Info
-    pub code:       &'static str,   // "E001", "W003"
-    pub message:    String,
-    pub location:   Location,       // section and line
-    pub suggestion: Option<String>,
-}
-```
-
-Standard codes:
-
-| Code | Severity | Meaning |
+**Core Fields (all required):**
+
+| Field | Syntax | Source | Description |
+|---|---|---|---|
+| **Subject** | `*Actor*` | Role Taxonomy | The holder of the legal position |
+| **Hohfeldian Verb** | `**a le droit de**` etc. | Fixed vocabulary | Determines the Hohfeldian position |
+| **Action** | `*action*` | Action Taxonomy | The act being regulated |
+| **Object** | `*object*` | Object Taxonomy | The thing the action operates on |
+| **Counterparty** | `*Counterparty*` | Role Taxonomy | The other party in the legal relation |
+
+**Optional Modifiers:**
+
+| Modifier | Syntax | Effect |
 |---|---|---|
-| E001 | Error | Required section missing |
-| E002 | Error | Required field missing in section |
-| E010 | Error | Unpinned import in review/final mode |
-| E011 | Error | Resolved term not found in any manifest |
-| E012 | Error | Undefined plain term (review/final mode) |
-| E020 | Error | Fuzzy term not declared in § Known Ambiguities |
-| E030 | Error | Conflict: simultaneously permitted and forbidden |
-| E040 | Error | Incompatible framework axioms |
-| W001 | Warning | No jurisdiction declared |
-| W002 | Warning | No version governance declared |
-| W010 | Warning | Undefined plain term (draft mode) |
-| W030 | Warning | Provision detected — silent gap filled |
-| I001 | Info | No amendment procedure declared |
+| **Exception** | `exception de #ref` | Declares this norm as an exception of `#ref`; position becomes O(parent.position), depth increments |
+| **Overrules** | `overrules #ref` | Declares lex specialis precedence over `#ref` at the same depth |
+| **Condition** | `when *condition*` | Boolean guard — norm only applies when condition holds |
 
----
-
-## 8. The Transpiler — Lean 4
-
-### 8.1 Generated File Assembly
-
-The drafter never sees or edits generated `.lean` files. The `.md` source is
-authoritative. Generated files carry a header stating they must not be edited.
-
-The transpiler assembles Lean 4 output in three steps:
-
-**Step 0 — Preamble (from frameworks)**
-
-```
-frameworks/universal/core.md  ─┐
-frameworks/common-law/...md   ─┤→ preamble.lean (generated)
-frameworks/eu/gdpr.md         ─┘
-```
-
-The preamble contains all axioms extracted from `## Lean4` sections in
-framework files, emitted in dependency order. Universal axioms first,
-specific framework axioms after.
-
-**Step 1 — Definitions (from definition packages)**
-
-```
-definitions/core/actors.md        ─┐
-definitions/actions/software.md   ─┤→ definitions.lean (generated)
-definitions/data/gdpr.md          ─┘
-```
-
-Types are emitted before axioms within each package. Packages are emitted
-in import order.
-
-**Step 2 — Document**
-
-```
-document.md → document.lean (generated, imports preamble + definitions)
-```
-
-### 8.2 The Lean4 Section Format in Stdlib Files
-
-Definition files use subsections to distinguish types from axioms,
-allowing the transpiler to emit them in the correct order:
+**Example with all components:**
 
 ```markdown
-## distribute
+### Deduction Exception
 
-**Meaning:** To transfer or make available copies of the Software to third parties.
-
-**Lean4:**
-
-### Types
-```lean4
-opaque distribute : Person → Software → Action
+*Exploitant Agricole* **a le droit de** *déduire* *Déficit Agricole* à *Administration Fiscale*
+  exception de #art156-norme-principale
+  overrules #general-deduction-rule
+  when *Revenu Global* > *Seuil Revenu Agricole*
 ```
 
-### Axioms
-```lean4
-axiom distribute_triggers_obligations :
-  ∀ (p : Person) (sw : Software),
-  performs p (distribute sw) →
-  Obligated p (include_notice sw)
-```
-```
+**Concrete Norm Example — Element Breakdown:**
 
-### 8.3 Transpilation of the MIT Grant
+```mermaid
+flowchart LR
+    S["Exploitant Agricole"]
+    V["a le droit de"]
+    A["déduire"]
+    O["Déficit Agricole"]
+    CP["Administration Fiscale"]
 
-Source markdown:
-```markdown
-## Grant
-**To:** any *Person*
-**Permitted:**
-- *use*
-- *distribute*
-- *sublicense*
-```
+    S --> V --> A --> O --> CP
 
-Generated Lean 4:
-```lean4
--- Transpiled from mit.md § Grant
-def MIT_Grant (recipient : Person) (sw : Software) : Prop :=
-  obtained recipient sw →
-    Permitted recipient (use sw)        ∧
-    Permitted recipient (distribute sw) ∧
-    Permitted recipient (sublicense sw)
+    CS["Subject\nRole Taxonomy\nHolder of the legal position"]
+    CV["Hohfeldian Position: Right\nDetermines the legal relationship"]
+    CA["Action\nAction Taxonomy\nThe act being regulated"]
+    CO["Object\nObject Taxonomy\nThe thing the action operates on"]
+    CCP["Counterparty\nRole Taxonomy\nThe other party in the relation"]
 
-theorem MIT_sublicense_bounded (r : Person) (sw : Software) :
-  MIT_Grant r sw →
-  sublicense_rights r sw ⊆ original_rights sw := by
-  intro h
-  exact sublicense_bound _ _ _ (grant_rights_bounded h)
-```
+    S --- CS
+    V --- CV
+    A --- CA
+    O --- CO
+    CP --- CCP
 
-### 8.4 Fuzzy Terms Become sorry Stubs
-
-```lean4
--- Fuzzy term: substantial_portions
--- Declared in mit.md § Known Ambiguities
--- Intentional flexibility — human judgment required
--- Review trigger: when contested in legal proceedings
-def substantial_portions_threshold : Nat := by
-  sorry  -- documented: no threshold defined, 30 years of litigation
-```
-
-Every `sorry` in a generated file corresponds to exactly one fuzzy term
-declared in § Known Ambiguities. There are no silent sorrys. The sorry
-inventory in the report translates each one into plain language and
-required human action.
-
-### 8.5 Transpilation of Defeasibility
-
-Source markdown (indented bullets):
-```markdown
-**Voting Rights:**
-- *citizen*
-  - active_conviction → none
-    - sentence_served → *citizen*
-```
-
-Generated Lean 4:
-```lean4
-def voting_rules : List (Rule Person VotingRight) := [
-  { id := "citizen", applies := fun p _ => citizen p,
-    permitted := true, priority := 1 },
-  { id := "conviction", applies := fun p _ => active_conviction p,
-    permitted := false, priority := 2 },
-  { id := "served", applies := fun p _ => sentence_served p,
-    permitted := true, priority := 3 }
-]
-
-def voting_permitted (p : Person) : Bool :=
-  defeasible_permitted voting_rules p VotingRight.vote
+    style S fill:#fff9e6,stroke:#ffc107,stroke-width:2px
+    style V fill:#fff9e6,stroke:#ffc107,stroke-width:2px
+    style A fill:#fff9e6,stroke:#ffc107,stroke-width:2px
+    style O fill:#fff9e6,stroke:#ffc107,stroke-width:2px
+    style CP fill:#fff9e6,stroke:#ffc107,stroke-width:2px
+    style CS fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style CV fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style CA fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style CO fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
+    style CCP fill:#e3f2fd,stroke:#2196f3,stroke-width:2px
 ```
 
 ---
 
-## 9. The Report
+## 10. Taxonomy System
 
-### 9.1 Report Structure
+### 10.1 Four Taxonomies
 
-The report is the product. Everything else is machinery. The report translates
-all stage outputs into plain language that a non-technical drafter can read
-and act on.
+Every document defines four hierarchical taxonomies:
+
+1. **Entity** — Legal entities (Person, Organization)
+2. **Role** — Roles entities play (Taxpayer, Licensor)
+3. **Action** — Actions that can be performed (pay, deduct)
+4. **Object** — Things actions operate on (Income, Software)
+
+### 10.2 Taxonomy Structure
 
 ```markdown
-# OpenNorm Verification Report
-**Document:** MIT License
-**Version:** 1.0
-**Checked:** 2025-01-15T14:23:01Z
-**OpenNorm:** 0.2
-**Result:** ⚠️ VALID WITH WARNINGS
+### Object Taxonomy
+
+- Financial Objects
+  - Income
+    - Salary Income
+    - Business Income
+  - Deductions
+    - Standard Deduction
+    - Itemized Deduction
+```
+
+### 10.3 Taxonomy Features
+
+- **Hierarchical** — Parent-child relationships
+- **Subsumption** — Child terms inherit parent properties
+- **Normalization** — Spaces removed for internal keys ("Déficit BIC" → "DéficitBIC")
+- **Display names** — Original names preserved for output
+- **Source tracking** — Tracks which package defined each term
+- **Merging** — Imported taxonomies merge with local definitions
 
 ---
 
-## Summary
+## 11. Dimensional Analysis
 
-| Category | Count |
+### 11.1 Purpose
+
+Dimensional analysis catches type errors in calculations:
+
+```julia
+# Valid
+*Total* = *Amount1* + *Amount2*  # EUR + EUR = EUR ✓
+
+# Invalid
+*Total* = *Amount* + *Years*     # EUR + years = ??? ✗
+```
+
+### 11.2 Unit System
+
+Built on Unitful.jl with custom units:
+
+- **Currency:** EUR, USD, GBP
+- **Time:** years, months, days
+- **Dates:** Date type
+- **Percentages:** % (dimensionless)
+- **Boolean:** Boolean type
+
+### 11.3 Type Environment
+
+Variables declare types in the Object taxonomy:
+
+```markdown
+### Object Taxonomy
+
+- OpenNormVariables
+  - ComputedVariables
+    - Déficit Agricole Imputable = *EUR*
+    - Taux Marginal = *%*
+  - Parameters
+    - Seuil Revenu = 127677 *EUR*
+```
+
+The type checker builds a type environment and validates all expressions.
+
+### 11.4 Validation Process
+
+1. **Parse** procedures into expression ASTs
+2. **Build** type environment from taxonomy
+3. **Infer** dimensions for each expression
+4. **Compare** inferred vs declared dimensions
+5. **Report** mismatches as errors
+
+---
+
+## 12. SMT Validation with Z3
+
+### 12.1 Purpose
+
+Z3 verifies logical consistency of norms:
+
+- **Contradiction detection** — Same actor cannot have Right and NoRight
+- **Subsumption checking** — Taxonomy relationships preserved
+- **Exception consistency** — Exception hierarchies are valid
+- **Jurisdiction constraints** — Lex superior relationships enforced
+
+### 12.2 Translation to SMT
+
+Norms translate to Z3 assertions:
+
+```julia
+# OpenNorm
+*Taxpayer* **a le droit de** *deduct* *Deficit* à *Administration*
+
+# Z3 SMT-LIB
+(assert (holds Right Taxpayer deduct Deficit Administration))
+```
+
+### 12.3 Contradiction Detection
+
+Z3 checks satisfiability:
+
+```
+sat     → Document is logically consistent
+unsat   → Contradiction detected
+unknown → Undecidable (complex constraints)
+```
+
+When unsatisfiable, Z3 provides a counterexample showing the contradiction.
+
+---
+
+## 13. Code Generation
+
+### 13.1 OpenFisca Backend
+
+Generates Python code for tax simulations:
+
+**Input (OpenNorm):**
+
+```markdown
+## *Déficit Agricole Imputable*
+
+*Déficit Agricole Imputable* = min(*Déficit Agricole*, *Seuil*)
+```
+
+**Output (Python):**
+
+```python
+class deficit_agricole_imputable(Variable):
+    value_type = float
+    entity = FoyerFiscal
+    definition_period = YEAR
+    
+    def formula(foyer_fiscal, period, parameters):
+        deficit = foyer_fiscal('deficit_agricole', period)
+        seuil = parameters(period).seuil_revenu_agricole
+        return min_(deficit, seuil)
+```
+
+### 13.2 YAML Generation
+
+Generates parameter files:
+
+```yaml
+seuil_revenu_agricole:
+  description: "Seuil de revenu pour imputation du déficit agricole"
+  values:
+    2023-01-01:
+      value: 127677
+    2024-01-01:
+      value: 130000
+```
+
+### 13.3 Graph Generation
+
+Generates Mermaid norm dependency graphs showing exception hierarchies between norms. Blue nodes are universal framework norms, red nodes are French jurisdiction norms (CGI):
+
+```mermaid
+graph TD
+    art156-norme-principale[#art156-norme-principale]
+    universal-permission[#universal-permission]
+    art156-i-2-deficits-professions-non-commerciales[#art156-i-2-deficits-professions-non-commerciales]
+    art156-i-3-deficits-fonciers-plafond-10700-eur[#art156-i-3-deficits-fonciers-plafond-10700-eur]
+    art156-i-3-plafond-majore-renovation-energetique[#art156-i-3-plafond-majore-renovation-energetique]
+    generated-duty-establish-revenuimposable[#generated-duty-establish-revenuimposable]
+    generated-duty-carryforward-déficitbnc[#generated-duty-carryforward-déficitbnc]
+    generated-duty-carryforward-déficitfoncier[#generated-duty-carryforward-déficitfoncier]
+
+    generated-duty-establish-revenuimposable -->|exception of| art156-norme-principale
+    generated-duty-carryforward-déficitbnc -->|exception of| art156-i-2-deficits-professions-non-commerciales
+    generated-duty-carryforward-déficitfoncier -->|exception of| art156-i-3-deficits-fonciers-plafond-10700-eur
+    universal-permission -->|exception of| art156-i-3-plafond-majore-renovation-energetique
+    universal-permission -->|exception of| generated-duty-establish-revenuimposable
+    universal-permission -->|exception of| generated-duty-carryforward-déficitbnc
+    universal-permission -->|exception of| generated-duty-carryforward-déficitfoncier
+
+    classDef universal fill:#4A90E2,stroke:#2E5C8A,color:#fff,stroke-width:2px
+    classDef french fill:#E24A4A,stroke:#8A2E2E,color:#fff,stroke-width:2px
+
+    class universal-permission,generated-duty-establish-revenuimposable,generated-duty-carryforward-déficitbnc,generated-duty-carryforward-déficitfoncier universal
+    class art156-norme-principale french
+    class art156-i-2-deficits-professions-non-commerciales french
+    class art156-i-3-deficits-fonciers-plafond-10700-eur,art156-i-3-plafond-majore-renovation-energetique french
+```
+
+Each arrow represents an exception relationship: the child norm is an exception of the parent norm. The graph is generated automatically from the parsed norm hierarchy.
+
+---
+
+## 14. The Universal Grundnorm
+
+### 14.1 Foundation of the Exception Hierarchy
+
+At the foundation of every OpenNorm document lies the **universal grundnorm** — a foundational norm from which all other norms are exceptions. This concept, inspired by Hans Kelsen's legal theory, provides the logical basis for the entire normative system.
+
+**The Grundnorm:**
+
+```markdown
+*AnyOne* **has privilege to** *AnyAction* *AnyThing* to *AnyOne* {grundnorm}
+```
+
+### 14.2 Purpose and Meaning
+
+The grundnorm establishes that **absent any specific normative constraint, anyone may do anything to anyone**. This is not a statement about what should be permitted in reality, but rather a logical starting point for building a complete normative system.
+
+**Key insights:**
+
+1. **All norms are restrictions** — Every legal rule restricts this universal permission in some way
+2. **Complete exception hierarchy** — Every norm can be traced back to the grundnorm through exception relationships
+3. **Logical completeness** — The system has no gaps; every situation is covered either by the grundnorm or an exception to it
+
+### 14.3 Exception Relationships
+
+When a norm does not explicitly specify its exception relationship, it is implicitly an exception of the grundnorm:
+
+```markdown
+### Software License Grant
+
+*Licensor* **has privilege to** *use*, *copy*, *modify* *the Software* to *Licensee*
+# Implicitly: exception de grundnorm
+```
+
+The system can generate intermediate norms to bridge any gaps between the grundnorm and declared norms, ensuring a complete exception hierarchy for SMT solver verification.
+
+### 14.4 Depth-Based Position Flipping
+
+Exception depth determines which Hohfeldian position applies:
+
+```
+Depth 0 (grundnorm):  Privilege (universal permission)
+Depth 1 (exception):  NoRight (restriction via O operator)
+Depth 2 (exception):  Privilege (exception to restriction)
+Depth 3 (exception):  NoRight (exception to exception)
+```
+
+This alternating pattern ensures that exceptions and counter-exceptions maintain logical consistency.
+
+### 14.5 Practical Example
+
+Consider a software license:
+
+```markdown
+## Grundnorm (implicit, depth 0)
+*AnyOne* **has privilege to** *AnyAction* *AnyThing* to *AnyOne*
+
+## Copyright Law (depth 1, exception de grundnorm)
+*AnyOne* **has no right to** *copy* *Copyrighted Work* from *Copyright Holder*
+
+## License Grant (depth 2, exception de copyright-law)
+*Licensee* **has privilege to** *copy* *the Software* to *AnyOne*
+when *Licensee* has *obtained* *the License*
+
+## License Condition (depth 3, exception de license-grant)
+*Licensee* **has no right to** *copy* *the Software* from *Licensor*
+when *Licensee* has not *included* *Copyright Notice*
+```
+
+Each level restricts or restores permissions in a logically consistent way.
+
+### 14.6 SMT Verification
+
+The grundnorm enables complete SMT verification:
+
+1. **Completeness** — Every possible action is covered (either permitted by grundnorm or restricted by exception)
+2. **Consistency** — Contradictions are detected when two norms at the same depth conflict
+3. **Traceability** — Every norm's legal basis can be traced through the exception hierarchy
+
+The Z3 solver verifies that:
+- No two norms at the same depth contradict each other
+- Exception relationships preserve the Hohfeldian position algebra
+- The complete system is satisfiable
+
+---
+
+## 15. Built-in Constraints & Verification
+
+OpenNorm enforces a rich set of structural and logical constraints automatically during parsing and validation. These constraints catch errors that would otherwise only surface at runtime or in legal disputes.
+
+### 15.1 Constraint Categories
+
+| Constraint | Layer | Mechanism | Error Type |
+| --- | --- | --- | --- |
+| Binary relations | Norm Syntax | Parser | ERROR |
+| Context-dependent roles | Taxonomy | IR validation | ERROR |
+| Contradiction detection | SMT/IR | Z3 solver | ERROR |
+| Deontic logic | Exception Syntax | Parser | ERROR |
+| Type safety | Dimensional Analysis | Unitful.jl | ERROR |
+| Exhaustiveness | Case Validation | IR checker | WARNING |
+| Taxonomy consistency | Taxonomy | Merge validator | ERROR |
+| Jurisdiction hierarchy | Jurisdiction | SMT encoder | ERROR |
+
+### 15.2 Binary Relations (Norm Syntax)
+
+Every norm must be a **binary relation** between exactly two parties:
+
+```markdown
+# Valid: binary relation
+*Taxpayer* **a le droit de** *deduct* *Deficit* à *Administration*
+
+# Invalid: missing counterparty
+*Taxpayer* **a le droit de** *deduct* *Deficit*
+```
+
+The parser enforces that every norm has:
+
+- A subject (actor)
+- A Hohfeldian position keyword
+- An action
+- An object
+- A counterparty
+
+### 15.3 Context-Dependent Roles (Taxonomy)
+
+Roles are context-dependent — the same entity can play different roles in different norms:
+
+```markdown
+### Role Taxonomy
+- Taxpayer
+  - Individual Taxpayer
+  - Corporate Taxpayer
+- Administration
+  - Tax Authority
+  - Customs Authority
+```
+
+The taxonomy validator checks that:
+
+- All roles used in norms are declared in the Role taxonomy
+- Role subsumption is respected (a norm about `Taxpayer` applies to `Individual Taxpayer`)
+- No role is used as both subject and counterparty in the same norm without explicit justification
+
+### 15.4 Contradiction Detection (SMT/IR)
+
+The SMT encoder translates norms into Z3 assertions and checks for contradictions:
+
+```
+# Contradiction: same actor, same action, conflicting positions
+*Taxpayer* **a le droit de** *deduct* *Deficit* à *Administration*
+*Taxpayer* **n'a pas le droit de** *deduct* *Deficit* à *Administration*
+→ UNSAT: contradiction detected
+```
+
+Contradiction detection covers:
+
+- **Direct contradictions** — Right and NoRight for the same tuple
+- **Subsumption contradictions** — Norm on parent conflicts with norm on child
+- **Exception contradictions** — Exception at same depth as base rule
+
+### 15.5 Deontic Logic (Exception Syntax)
+
+Exception hierarchies enforce deontic consistency:
+
+```markdown
+### Base Rule (depth 1)
+*AnyOne* **n'a pas le droit de** *copy* *Software* à *Owner*
+
+  ### Exception (depth 2)
+  *Licensee* **a le privilège de** *copy* *Software* à *Owner*
+  when *Licensee* has *valid license*
+
+    ### Sub-Exception (depth 3)
+    *Licensee* **n'a pas le droit de** *copy* *Software* à *Owner*
+    when *License* is *expired*
+```
+
+The validator checks:
+
+- Exception depth is consistent with position (odd depth → NoRight/Disability, even depth → Privilege/Immunity)
+- Exception references a valid parent norm
+- No orphaned exceptions (exceptions without a parent)
+
+### 15.6 Type Safety (Dimensional Analysis)
+
+All computational procedures are type-checked with dimensional analysis:
+
+```julia
+# Type error caught at validation time
+*Result* = *Amount_EUR* + *Duration_years*
+# ERROR: Cannot add EUR and years
+```
+
+Type safety enforces:
+
+- **Unit consistency** — Operations only between compatible units
+- **Declaration matching** — Computed type matches declared type in taxonomy
+- **Parameter types** — Parameters have declared units
+- **Function signatures** — Built-in functions (min, max, sum) preserve units correctly
+
+### 15.7 Exhaustiveness (Case Validation)
+
+Case expressions must cover all possible inputs:
+
+```markdown
+*Déficit Imputable* =
+  case *Type de Déficit*:
+    *Agricole* → *Déficit Agricole Imputable*
+    *BIC*      → *Déficit BIC Imputable*
+    *BNC*      → *Déficit BNC Imputable*
+    # WARNING: *Foncier* case not covered
+```
+
+The exhaustiveness checker:
+
+- Identifies all possible values from the taxonomy
+- Checks that each value has a corresponding case branch
+- Issues WARNING (not ERROR) for missing cases, since legal documents may intentionally leave gaps
+
+### 15.8 Taxonomy Consistency
+
+When multiple documents are imported, their taxonomies must be consistent:
+
+```
+# ERROR: Conflicting definitions
+stdlib/core defines: Taxpayer → Person
+local document defines: Taxpayer → Organization
+→ ERROR: Conflicting taxonomy definitions for 'Taxpayer'
+```
+
+Taxonomy consistency checks:
+
+- **No redefinition** — Same term cannot have different parents in different imports
+- **No cycles** — Taxonomy hierarchy must be a DAG (directed acyclic graph)
+- **No orphans** — Every term must have a parent (except root terms)
+- **Source tracking** — Every term records which package defined it
+
+### 15.9 Jurisdiction Hierarchy & Conflict Resolution
+
+When norms from different sources conflict, OpenNorm applies three classical legal conflict resolution principles:
+
+#### Lex Superior (Hierarchy of Authority)
+
+Higher-authority norms override lower-authority ones. The jurisdiction hierarchy is declared in the stdlib:
+
+```markdown
+**Jurisdiction:** FR.Loi
+
+# Hierarchy (highest to lowest):
+# FR.Constitution > FR.Loi > FR.Décret > FR.Arrêté
+```
+
+A lower-authority norm cannot override a higher-authority norm:
+
+```
+# ERROR: FR.Décret cannot override FR.Constitution
+FR.Constitution: *AnyOne* **n'a pas le droit de** *discriminate* ...
+FR.Décret:       *Employer* **a le droit de** *discriminate* ...  ← BLOCKED by lex superior
+```
+
+#### Lex Specialis (Specificity)
+
+More specific norms take precedence over general ones at the same authority level:
+
+```markdown
+# General norm (applies to all taxpayers)
+*Contribuable* **a le droit de** *déduire* *Déficit* à *Administration*
+
+# Specific norm (overrules for agricultural taxpayers)
+*Exploitant Agricole* **a le droit de** *déduire* *Déficit Agricole*
+  overrules #general-deduction-rule
+  when *Revenu Global* > *Seuil Agricole*
+```
+
+The `overrules` keyword explicitly declares that a norm supersedes another at the same level via specificity.
+
+#### Lex Posterior (Recency)
+
+More recent norms take precedence over older ones at the same authority level and specificity:
+
+```markdown
+**Version:** 3.0
+**Supersedes:** cgi.art156@2.0
+
+# Norms in this version automatically overrule norms from superseded versions
+```
+
+#### Conflict Detection
+
+The SMT encoder detects unresolved conflicts — cases where two norms conflict but no resolution mechanism has been declared:
+
+```
+WARNING: Potential conflict between #norm-A and #norm-B
+  Both apply to: (Contribuable, déduire, Déficit, Administration)
+  No overrules, lex superior, or lex posterior resolution declared
+  → Human review required
+```
+
+The validator enforces:
+
+- **Lex superior** — Higher-authority norms cannot be overridden by lower-authority exceptions
+- **Lex specialis** — `overrules` keyword explicitly declares specificity-based precedence
+- **Lex posterior** — `Supersedes` manifest field declares version-based precedence
+- **Unresolved conflicts** — Flagged as WARNINGs requiring human review
+
+### 15.10 Verification Pipeline
+
+All constraints are checked in a defined order:
+
+```
+1. Parse document structure
+   └── Binary relation syntax
+   └── Manifest fields
+   └── Taxonomy structure
+
+2. Resolve imports
+   └── Circular dependency detection
+   └── Version compatibility
+   └── Taxonomy merging & consistency
+
+3. Build IR (Intermediate Representation)
+   └── Context-dependent role validation
+   └── Exception hierarchy validation
+   └── Jurisdiction assignment
+
+4. Dimensional analysis
+   └── Type environment construction
+   └── Expression type inference
+   └── Type declaration matching
+
+5. SMT encoding & solving
+   └── Norm translation to Z3
+   └── Contradiction detection
+   └── Jurisdiction constraint checking
+   └── Exhaustiveness checking
+
+6. Report results
+   └── ERRORs block finalization
+   └── WARNINGs require human review
+```
+
+### 15.11 Why These Constraints Matter
+
+These constraints transform legal documents from **prose** into **verified specifications**:
+
+| Without OpenNorm | With OpenNorm |
 |---|---|
-| ✅ Resolved terms | 11 |
-| ⚠️ Fuzzy terms | 3 |
-| ❌ Hard errors | 0 |
-| ℹ️ Warnings | 3 |
-| 🔬 Proved theorems | 3 |
-| 📋 Sorry stubs | 3 |
+| Contradictions discovered in court | Contradictions detected at authoring time |
+| Type errors in tax calculations | Dimensional analysis catches unit mismatches |
+| Undefined terms cause ambiguity | Undefined terms are hard errors |
+| Import conflicts go unnoticed | Taxonomy merging detects conflicts |
+| Jurisdiction conflicts require lawyers | SMT solver verifies lex superior automatically |
 
 ---
 
-## Stage 1 — Parse
-## Stage 2 — Structure
-### Resolved Terms  [table]
-### Fuzzy Terms     [table with inheritance labels]
-### Errors          [none]
-### Warnings        [W001 no jurisdiction, W002 no version governance]
+## 16. CLI Interface
 
----
-
-## Stage 3 — Transpilation
-## Stage 4 — Formal Verification
-### Proved
-### Sorry Inventory
-
----
-
-## Recommendations
-
----
-
-*This report was generated by OpenNorm 0.2*
-*It is not legal advice.*
-*The .md source document is the authoritative instrument.*
-*Lean 4 output is a consistency verification aid.*
-```
-
-### 9.2 The Sorry Inventory
-
-Every `sorry` in the generated Lean 4 corresponds to a fuzzy term.
-The report translates each one:
-
-| Sorry | Plain Language | Human Action Required |
-|---|---|---|
-| `substantial_portions_threshold` | What percentage of the software triggers the notice obligation? | Legal judgment at point of dispute. Review trigger: contested in legal proceedings. |
-| `otherwise_scope` | What is the full scope of the liability waiver? | Jurisdiction-specific interpretation. Review trigger: contested in legal proceedings. |
-
-### 9.3 Inherited Ambiguities
-
-When a document imports a clause, the clause's fuzzy terms appear in the
-report clearly labelled:
-
-| Term | Origin | Review Trigger | Status |
-|---|---|---|---|
-| `~~substantial_portions~~` | local | contested in legal proceedings | declared |
-| `~~otherwise~~` | inherited from clauses/warranty/as-is@1.0 | contested in legal proceedings | inherited |
-
----
-
-## 10. The LSP — Live Drafting
-
-The LSP server provides real-time feedback as a drafter writes an OpenNorm
-document in any compatible editor (VS Code, Neovim, Zed).
-
-```json
-{
-  "lsp": {
-    "opennorm": {
-      "command": "opennorm",
-      "args": ["--lsp"],
-      "filetypes": ["markdown"]
-    }
-  }
-}
-```
-
-The LSP activates on `.md` files that contain an `**OpenNorm:**` metadata field.
-On non-OpenNorm markdown it finds nothing to check and stays silent.
-
-Features:
-- Real-time term resolution as you type `*word*`
-- Inline error/warning annotations
-- Autocomplete for stdlib terms from imported packages
-- Hover documentation showing the full definition of any resolved term
-- Quick-fix suggestions for undefined terms
-
----
-
-## 11. The Query Layer
-
-After verification, the document is indexed as a structured knowledge graph.
-Queries run against the index — fast, deterministic, offline.
+### 16.1 Basic Usage
 
 ```bash
-# What can a recipient do?
-$ opennorm query mit.md "permissions"
+# Validate a document
+julia --project=. src/opennorm.jl documents/articles/CGI.Art.156.md
 
-# What triggers an obligation?
-$ opennorm query mit.md "obligation triggers"
+# Generate OpenFisca code
+julia --project=. src/opennorm.jl documents/articles/CGI.Art.156.md \
+  --openfisca output.py
 
-# Cross-document compatibility
-$ opennorm query "compatible mit.md apache2.md"
+# Generate with dependency graph
+julia --project=. src/opennorm.jl documents/articles/CGI.Art.156.md \
+  --openfisca output.py --graph
+```
 
-# All fuzzy terms and their risk
-$ opennorm query mit.md "fuzzy terms"
+### 16.2 Output
 
-# Is this BPMN process GDPR compliant?
-$ opennorm check-bpmn process.bpmn --regulation regulations/gdpr.md
+```
+Parsing document: documents/articles/CGI.Art.156.md
 
-# Compatibility graph across a directory
-$ opennorm graph licenses/
+=== Document Info ===
+Title: Article 156 du Code Général des Impôts
+Package: cgi.art156
+Version: 3.0
+Imports: 6 document(s)
+
+=== Taxonomy Info ===
+Norms: 15 (5 imported, 10 local)
+Entity taxonomy: 8 entities (3 imported, 5 local)
+Role taxonomy: 25 roles (10 imported, 15 local)
+Action taxonomy: 60 actions (40 imported, 20 local)
+Object taxonomy: 80 objects (30 imported, 50 local)
+
+=== Dimensional Analysis ===
+Registering 12 units from taxonomy...
+Type environment contains 45 typed variables
+Performing type resolution for 20 procedures...
+  ✓ *Déficit Agricole Imputable* (validated)
+  ✓ *Déficit BIC Imputable* (validated)
+  ...
+✓ Dimensional analysis complete: all 20 procedures validated
+
+=== Checking Satisfiability ===
+Translating OpenNorm to SMT...
+Running Z3 SMT solver...
+✓ Document is SATISFIABLE
+  The 15 norms are logically consistent
+
+=== Final Result ===
+✓ Document is valid
 ```
 
 ---
 
-## 12. CLI Interface
+## 17. Development
 
+### 17.1 Project Structure
+
+The codebase is organized into modular packages:
+
+- **`src/structures/`** — Core data structures (IR, taxonomies, Hohfeldian positions)
+- **`src/parser/`** — Markdown parsing and document extraction
+- **`src/codegen/`** — Code generation backends (OpenFisca, YAML, SMT, graphs)
+- **`src/type_checker.jl`** — Dimensional analysis and type validation
+- **`src/unit_system.jl`** — Unit registry and Unitful integration
+- **`src/SMT_solver.jl`** — Z3 integration and SMT translation
+
+### 17.2 Running Tests
+
+```bash
+# Run all tests
+julia --project=. test/runtests.jl
+
+# Run specific test categories
+julia --project=. -e 'using Test; include("test/parser/test_manifest.jl")'
+julia --project=. -e 'using Test; include("test/validation/test_dimensional.jl")'
+julia --project=. -e 'using Test; include("test/integration/test_cgi_art156.jl")'
 ```
-opennorm new <file.md>              Creates file from template.
-                                    Prompts for document type and framework.
 
-opennorm check <file.md>            Full pipeline. Produces report.
-                                    Exit 0: valid (with or without warnings)
-                                    Exit 1: errors present
+### 17.3 Adding New Features
 
-opennorm check-bpmn <process.bpmn>  Check BPMN process against a regulation.
-  --regulation <regulation.md>      Requires Phase 2 regulation encoding.
-  --report <output.md>
+**To add a new code generation backend:**
 
-opennorm review <file.md>           Full validation in review mode.
-  --external <dir>                  Check against other documents in directory.
+1. Create a new file in `src/codegen/` (e.g., `lean.jl`)
+2. Implement the backend interface from `src/codegen/core.jl`
+3. Add backend to `src/codegen/codegen.jl`
+4. Add tests in `test/codegen/`
 
-opennorm finalize <file.md>         Ratification check. All imports pinned.
-                                    All fuzzy terms declared. No errors.
-                                    Produces ratification record.
+**To add a new validation check:**
 
-opennorm pin <file.md>              Pins all auto-resolved imports to
-                                    current stable stdlib versions.
+1. Add validation logic to `src/parser/validation.jl`
+2. Integrate into `parse_document` in `src/parser/parser.jl`
+3. Add tests in `test/validation/`
 
-opennorm diff <file1> <file2>       Semantic diff — changes in meaning,
-                                    not just text. Shows compatibility delta.
+### 17.4 Code Quality
 
-opennorm query <file> <query>       Query the document index.
+The project uses Aqua.jl for code quality checks:
 
-opennorm graph <directory>          Compatibility graph of all indexed documents.
-
-opennorm explain <file> <term>      Trace a term — where defined, where used,
-                                    what it affects.
-
-opennorm --lsp                      Start LSP server mode.
+```bash
+julia --project=. -e 'using Test; include("test/aqua.jl")'
 ```
+
+Checks include:
+
+- Method ambiguities
+- Unbound type parameters
+- Undefined exports
+- Project structure consistency
 
 ---
 
-## 13. MVP — MIT License in OpenNorm
+## Contributing
 
-### 13.1 The Goal
+OpenNorm is open source under the Apache 2.0 license. Contributions are welcome!
 
-Produce a single file, `licenses/mit.md`, that:
+**Areas for contribution:**
 
-- Is indistinguishable from a well-formatted legal document to a non-technical reader
-- Could replace the MIT license in a project without legal ambiguity
-- Passes the OpenNorm parser without structural errors
-- Has all terms resolved, declared fuzzy, or flagged as known gaps
-- Generates valid Lean 4 that compiles and produces a formal verification report
-- Surfaces the known ambiguities that 30 years of litigation have identified
-- Proves the sublicense constraint: a sublicensee cannot receive more rights than
-  the licensor held
+- Additional tax code articles
+- New validation patterns
+- Code generation backends (Lean, Coq, Solidity)
+- Documentation improvements
+- Test cases
+- Bug reports
+- Standard library expansion
 
-**Success criterion:** the report flags the known MIT ambiguities that 30 years of
-litigation have identified. The sublicense constraint is formally proved. The tool
-works end-to-end.
+**Getting started:**
 
-### 13.2 The Document
+1. **Install Julia 1.12+**
 
-```markdown
-# MIT License
+   ```bash
+   # See https://julialang.org/downloads/
+   ```
 
-> The MIT License is a permissive free software license originating at the
-> Massachusetts Institute of Technology. It permits free use, modification,
-> distribution, and commercialisation of software, subject only to the
-> condition that the original copyright and permission notice be preserved
-> in all copies or substantial portions of the software.
->
-> This document is the MIT License encoded in OpenNorm 0.2. *Italicised terms*
-> are formally defined in the referenced packages. ~~Struck-through terms~~ are
-> intentionally flexible and declared in § Known Ambiguities below.
+2. **Clone the repository**
 
-**OpenNorm:** 0.2
-**ID:** MIT
-**Version:** 1.0
-**Template:** license
-**Status:** review
-**Imports:**
-- stdlib/definitions/core/actors@1.0
-- stdlib/definitions/actions/software@1.0
-- stdlib/definitions/economics/core@1.0
-- stdlib/definitions/ip/copyright@1.0
+   ```bash
+   git clone https://github.com/atthom/opennorm.git
+   cd opennorm
+   ```
 
----
+3. **Install dependencies**
 
-## Grant
+   ```bash
+   julia --project=. -e 'using Pkg; Pkg.instantiate()'
+   ```
 
-**To:** any *Person*
-**Condition:** obtained a copy of the *Software*
-**Cost:** *free_of_charge*
-**Scope:** worldwide, perpetual, irrevocable, non-exclusive
+4. **Run tests**
 
-Permission is hereby granted, *free_of_charge*, to any *Person* obtaining
-a copy of the *Software* and *associated_documentation*, to *deal* in the
-*Software* without restriction, including without limitation the rights to
-*use*, *copy*, *modify*, *merge*, *publish*, *distribute*, *sublicense*,
-and *sell* copies of the *Software*, and to permit persons to whom the
-*Software* is furnished to do so, subject to the following conditions:
+   ```bash
+   julia --project=. test/runtests.jl
+   ```
 
-**Permitted:**
-- *use* the *Software* for any purpose
-- *copy* the *Software*
-- *modify* the *Software*
-- *merge* the *Software* with other software
-- *publish* the *Software*
-- *distribute* the *Software*
-- *sublicense* the *Software*
-- *sell* copies of the *Software*
-- permit *Person*s to whom the *Software* is furnished to do the same
+5. **Try examples**
+
+   ```bash
+   julia --project=. src/opennorm.jl documents/articles/CGI.Art.156.md
+   ```
+
+**Development workflow:**
+
+1. Create a feature branch
+2. Make your changes
+3. Add tests for new functionality
+4. Run the test suite
+5. Submit a pull request
 
 ---
 
-## Obligations
+## Documentation
 
-**When:** *distribute* or *sublicense*
-
-The above *copyright_notice* and this *permission_notice* shall be included
-in all copies or ~~substantial_portions~~ of the *Software*.
-
-**Must include in all copies or** ~~substantial_portions~~**:**
-- *copyright_notice*
-- *permission_notice*
+- **[Hohfeldian Syntax Reference](documents/design/HOHFELDIAN_SYNTAX_REFERENCE.md)** — Complete specification of the position system
+- **[Operational Layer Spec](documents/design/OPERATIONAL_LAYER_SPEC.md)** — Procedures and computational layer
+- **[Dimensional Analysis](documents/design/DIMENSIONAL_ANALYSIS.md)** — Type checking and unit system
+- **[Test Suite Guide](test/README.md)** — Running and writing tests
 
 ---
 
-## Waivers
+## License
 
-The *Software* is provided "as is", without warranty of any kind, express
-or implied, including but not limited to the warranties of merchantability,
-fitness for a particular purpose, and non-infringement. In no event shall
-the authors or *copyright_notice* holders be liable for any claim, damages,
-or other liability, whether in an action of contract, tort, or ~~otherwise~~,
-arising from, out of, or in connection with the *Software* or the use or
-other dealings in the *Software*.
+Apache License 2.0
 
-**Warranty waived:** all warranties, express or implied
-**Liability waived:** all claims arising from use, including contract and tort
-**Scope:** ~~otherwise~~ — catch-all, see § Known Ambiguities
+See [LICENSE](LICENSE) for full text.
 
 ---
 
-## Known Ambiguities
-
-> The following terms are intentionally flexible. They require human judgment
-> at the point of application and cannot be formally resolved without context.
-> This is a deliberate characteristic of the MIT License, not an oversight.
-
-- **substantial_portions** — no threshold defined for when the notice obligation
-  applies. Litigated across multiple jurisdictions for thirty years without
-  producing a bright-line rule. The absence of a threshold is arguably intentional.
-  **Review trigger:** contested in legal proceedings
-
-- **otherwise** — catch-all in the liability waiver, scope intentionally unbounded.
-  **Review trigger:** contested in legal proceedings
-
-- **associated_documentation** — scope of what files are covered alongside the
-  primary codebase. Does "associated" include README files, man pages, a project
-  website? Currently undefined.
-  **Review trigger:** ten years from this version, or when contested
-
----
-
-## Structural Notes
-
-> Structural characteristics identified by OpenNorm. Not defects — design choices.
-
-- **No jurisdiction declared.** Intentionally jurisdiction-neutral. Enforcement
-  varies by location. OpenNorm status: warning W001 issued, acknowledged.
-
-- **No version governance.** No institution controls the MIT name or namespace.
-  OpenNorm status: warning W002 issued, acknowledged.
-
-- **No amendment procedure.** MIT 1.0 was the first and only version. Consistent
-  with its design as a minimal, stable, one-version instrument.
-  OpenNorm status: info I001 issued, acknowledged.
-```
-
-### 13.3 Expected Report Output
-
-Running `opennorm check licenses/mit.md` produces:
-
-**Resolved:** use, copy, modify, merge, publish, distribute, sublicense, sell,
-Person, Software, free_of_charge, copyright_notice, permission_notice,
-associated_documentation, deal
-
-**Fuzzy:** substantial_portions, otherwise, associated_documentation_scope
-
-**Proved:** no internal contradictions; sublicense_rights ⊆ grant_rights;
-obligations are fulfillable without licensor action
-
-**Undecidable:** obligation scope under SaaS distribution (documented, known gap)
-
-**Structural gaps:** no jurisdiction (W001), no version governance (W002),
-no amendment procedure (I001)
-
-### 13.4 Build Steps for MVP
-
-```
-Step 1 — frameworks/universal/core.md
-  Define Permitted, Obligated, Forbidden as axioms
-  Define deontic_consistency axiom
-  Define obligation_permits axiom
-  Define defeasibility Rule structure and winning_rule function
-  Test: manually write a 3-clause toy document
-        introduce contradiction
-        verify Lean catches it
-  This is the proof of concept for the entire system.
-
-Step 2 — pest grammar
-  Write src/openlex.pest
-  Cover: document, metadata, sections, fields,
-         bullet_lists, terms, references, prose_blocks
-  Test against hand-crafted valid and invalid documents
-
-Step 3 — Rust AST types
-  Write src/ast.rs
-
-Step 4 — Parser
-  Write src/parser.rs
-  pest pairs → AST
-
-Step 5 — Proto-stdlib packages
-  Write stdlib/frameworks/universal/core.md
-  Write stdlib/templates/license.md
-  Write stdlib/definitions/core/actors.md
-  Write stdlib/definitions/actions/software.md
-  Write stdlib/definitions/economics/core.md
-  Write stdlib/definitions/ip/copyright.md
-  Write stdlib/clauses/warranty/as-is.md
-  Write stdlib/clauses/notice/copyright-preservation.md
-  All are OpenNorm documents, not code.
-
-Step 6 — Checker
-  Write src/checker.rs
-  Three passes: template, term resolution, clause integrity
-  Conflict detection
-  Fuzzy term inheritance from clauses
-
-Step 7 — Transpiler
-  Write src/transpiler.rs
-  Stage 0: assemble preamble.lean from framework files
-  Stage 1: assemble definitions.lean from definition packages
-  Stage 2: transpile document sections to document.lean
-
-Step 8 — Lean invocation
-  src/main.rs: subprocess call to lean
-  Parse output for proved/failed/sorry counts
-  Fallback gracefully if lean not on PATH
-
-Step 9 — Report builder
-  Write src/report.rs
-  Collect all stage outputs
-  Render plain text and JSON variants
-
-Step 10 — Encode MIT
-  Write licenses/mit.md
-  Run full pipeline
-  Verify: flagged ambiguities match 30 years of known litigation
-  Verify: sublicense constraint is proved
-  This is the validation test for the entire system.
-
-Step 11 — Deliberately broken test
-  Write tests/contradiction.md
-  Simultaneously permit and forbid the same action
-  Verify: contradiction is caught (E030)
-  This is the red team test.
-```
-
----
-
-## 14. Phase 2 — GDPR Compliance for Business Processes
-
-### 14.1 The Problem
-
-GDPR compliance for business processes is currently handled in three ways,
-all of them inadequate:
-
-**Consultants with checklists.** Manual, expensive, point-in-time,
-non-reproducible. Two consultants reviewing the same process reach different
-conclusions. When the process changes, the compliance review expires immediately.
-
-**Privacy-by-design workshops.** Catches obvious violations early but has no
-formal verification, no machine-readable output, and no way to detect that a
-compliant design became non-compliant when someone changed a downstream task.
-
-**GRC platforms.** Built around human attestation — someone clicks a checkbox
-saying "yes this process is compliant." The checkbox is not derived from any
-formal analysis. When it is wrong, nobody knows until there is an incident.
-
-The gap all three share: **there is no formal, machine-checkable connection
-between what the regulation says and what the process does.**
-
-### 14.2 The OpenNorm Approach
-
-OpenNorm starts from the normative side — from what the regulation actually
-says — and derives compliance requirements formally. The regulation is the ground
-truth. The process is what gets verified against it.
-
-Two artifacts are required:
-
-**`regulations/gdpr.md`** — the formal encoding of GDPR in OpenNorm.
-This imports `frameworks/eu/gdpr.md` for the axioms and encodes each relevant
-article as sections with obligations, conditions, and fuzzy terms.
-
-**A BPMN reader (`src/bpmn.rs`)** — parses a BPMN 2.0 XML file and produces
-an OpenNorm-compatible representation:
-
-```
-BPMN lanes          → OpenNorm actors
-BPMN tasks          → OpenNorm actions
-BPMN data objects   → OpenNorm data terms
-BPMN sequence flows → temporal ordering constraints
-BPMN message flows  → data transfer events
-BPMN gateways       → conditional branches
-```
-
-The compliance checker then verifies that the process representation does not
-violate the regulation encoding. Findings map to specific BPMN elements and
-specific GDPR articles.
-
-### 14.3 GDPR Articles That Map Cleanly
-
-Some GDPR obligations are sufficiently precise to encode as formal axioms
-with no fuzziness:
-
-**Article 6 — Lawful basis:**
-```lean4
-axiom lawful_basis_required :
-  ∀ p : DataProcessing, Lawful p →
-    HasConsent p ∨ ContractNecessity p ∨ LegalObligation p ∨
-    VitalInterests p ∨ PublicTask p ∨ LegitimateInterests p
-```
-A process that touches personal data without a declared lawful basis
-is a hard error.
-
-**Article 17 — Right to erasure:**
-```lean4
-axiom erasure_obligation :
-  ∀ (s : DataSubject) (c : Controller),
-  ValidErasureRequest s c →
-  Obligated c (erase (data_of s)) ∧ Within c 30
-```
-A BPMN process that receives an erasure request is checked: does it have
-a path terminating with erasure within 30 days?
-
-**Article 25 — Data minimisation:**
-```lean4
-axiom data_minimisation :
-  ∀ p : DataProcessing, Lawful p →
-  Necessary (data_collected p) (purpose p)
-```
-Every data collection step must have a declared purpose, and the data
-collected must be shown to be necessary for that purpose.
-
-**Article 13/14 — Information obligations:**
-```lean4
-axiom information_obligation :
-  ∀ (p : DataProcessing) (s : DataSubject),
-  CollectsFrom s p →
-  Obligated (controller p) (inform s) ∧ AtOrBefore (controller p) point_of_collection
-```
-
-### 14.4 GDPR Articles That Are Genuinely Fuzzy
-
-These become sorry stubs with review triggers. The sorry inventory becomes
-the DPO's prioritised work queue:
-
-| Fuzzy Term | Article | Why Fuzzy | Sorry Stub |
-|---|---|---|---|
-| `appropriate_measures` | 25, 32 | No formal threshold defined | `appropriate_security_threshold` |
-| `legitimate_interests` | 6(1)(f) | Requires a balancing test | `legitimate_interests_balancing` |
-| `high_risk` | 35 | Partial criteria, partial judgment | `dpia_risk_threshold` |
-| `reasonable_expectation` | 6(1)(f) | Context and jurisdiction dependent | `data_subject_expectation` |
-
-### 14.5 The Compliance Report
-
-Running `opennorm check-bpmn process.bpmn --regulation regulations/gdpr.md`
-produces a report where every finding is mapped to:
-
-- A specific BPMN element (task name, lane, line number in XML)
-- A specific GDPR article
-- The formal proposition that was violated or could not be proved
-- Whether the finding is a hard error, a warning, or a sorry requiring human judgment
-
-Example finding:
-```
-[E011] Task "Send confirmation email" (lane: Marketing, line 247)
-  transfers PersonalData to ExternalSystem "MailProvider"
-  No data processing agreement declared.
-  Possible violation: Article 28 — processor must provide sufficient guarantees.
-  Suggestion: Add a DPA reference to this task's data object annotations,
-              or add MailProvider to § Processors in your GDPR record of processing.
-```
-
-### 14.6 Business Value
-
-**For Data Protection Officers:** a tool that continuously monitors process
-compliance and produces auditable reports changes the job from reactive
-firefighting to proactive governance. Process changes trigger automatic re-check.
-
-**For consulting firms:** encode expertise once in a reusable OpenNorm GDPR
-library. Deliver continuous compliance monitoring rather than point-in-time
-assessments. Competitive advantage shifts from "we know GDPR" to "we have the
-best-validated GDPR encoding."
-
-**For process automation vendors:** GDPR compliance verification built into
-the process modelling tool (Camunda, Signavio, Bizagi) is a significant
-differentiator. A modeller that shows a compliance dashboard as you design
-is qualitatively different from one requiring a separate review after the fact.
-
-**For regulators:** a company that can demonstrate to a supervisory authority
-that every process was formally verified against the regulation, with an
-auditable report showing exactly which articles were checked and which fuzzy
-terms required human judgment, is in a materially different position than one
-that can only show a consultant's attestation.
-
-### 14.7 Build Steps for Phase 2
-
-```
-Step 1 — frameworks/eu/gdpr.md
-  Encode Articles 5, 6, 7, 13, 14, 17, 25, 28, 32 as axioms
-  Declare all genuinely fuzzy articles as ~~fuzzy_term~~ with review triggers
-  This is the core intellectual work. Requires legal + Lean 4 expertise.
-  Dissent system is load-bearing here — contested encodings are common.
-
-Step 2 — definitions/data/gdpr.md
-  Define: personal_data, data_subject, controller, processor
-  Define: consent, legitimate_interests, lawful_basis
-  Define: data_processing, purpose, retention_period
-  Build manifest for GDPR vocabulary recognition
-
-Step 3 — regulations/gdpr.md
-  The full GDPR encoded as an OpenNorm document
-  Each Article as a section
-  Obligations, conditions, and fuzzy terms properly declared
-  Run full pipeline — report must surface known GDPR ambiguities
-
-Step 4 — BPMN reader (src/bpmn.rs)
-  Parse BPMN 2.0 XML
-  Map lanes → actors, tasks → actions, data objects → data terms
-  Map sequence flows → temporal ordering
-  Map message flows → data transfer events
-  Output: OpenNorm-compatible process representation
-
-Step 5 — Compliance checker
-  Check process representation against regulation encoding
-  Map findings to BPMN elements and GDPR articles
-  Produce structured compliance report
-
-Step 6 — Validation
-  Test against a known non-compliant process (must fail with specific findings)
-  Test against a known compliant process (must pass with expected sorry inventory)
-  The sorry inventory must match the genuinely undecidable GDPR obligations
-```
-
----
-
-## 15. Known Limitations and Honest Boundaries
-
-### 15.1 The Translation Gap
-
-The parser verifies that the encoding is internally consistent. It cannot verify
-that the encoding faithfully represents the intent of the original document.
-This gap is addressed by the open source model — wrong encodings are public and
-correctable — but it cannot be eliminated by any formal system.
-
-### 15.2 Classical Logic and Defeasibility
-
-Law uses defeasible reasoning: rules hold unless defeated by more specific rules,
-later rules, or higher authority. Classical logic assumes monotonicity — adding
-facts never invalidates old proofs. OpenNorm addresses this through the explicit
-priority chain system, where indentation depth encodes priority. The complexity
-of defeasible reasoning is hidden in the generated Lean 4; the document surface
-remains readable. But this means the generated Lean 4 for complex documents with
-many exception chains will be verbose even when the source document is clean.
-
-### 15.3 Gödel Bounds
-
-For sufficiently complex regulatory interactions, the prover may return
-"undecidable" rather than true or false. This is not a bug. Undecidable cases
-become explicit warnings rather than hidden ambiguities that surface only in
-disputes. Converting invisible problems to visible ones is valuable even when
-the prover cannot resolve them.
-
-### 15.4 No Legal Standing
-
-An OpenNorm document has no legal standing in any jurisdiction until a court
-or legislature grants it recognition. This is an adoption problem, not a technical
-one. The path to legal standing runs through demonstrated utility at smaller
-scales — open source projects, organisations, foundations — building the track
-record that eventually makes courts and legislatures willing to treat OpenNorm
-documents as formal instruments.
-
-### 15.5 Jurisdiction Fragmentation
-
-Common law and civil law systems have different epistemologies, not just different
-vocabularies. The stdlib handles this through separate framework layers
-(frameworks/common-law/, frameworks/civil-law/, frameworks/eu/) that sit on top of
-the universal core. When documents from different frameworks interact, the checker
-flags the mismatch and requires explicit jurisdiction declaration. It cannot resolve
-the underlying substantive differences — it makes them visible.
-
-### 15.6 Prose Term Extraction
-
-The current grammar captures `*term*` and `~~term~~` patterns in prose blocks
-via pattern scanning rather than full parse-tree integration. This means terms
-embedded in flowing prose are scanned with a simpler mechanism than terms in
-structured fields and bullets. Full prose term integration is deferred to v0.3.
-In the meantime the checker warns when it detects prose patterns it cannot
-fully classify.
-
----
-
-## 16. Roadmap
-
-### Phase 1 — MVP (Current)
-
-- `frameworks/universal/core.md` — replaces hand-written Deontic.lean
-- `openlex.pest` grammar
-- Rust parser and AST
-- Proto-stdlib (frameworks, templates, definitions, clauses)
-- Checker (three-pass validation, conflict detection)
-- Transpiler (preamble + definitions + document generation)
-- Report builder
-- MIT License encoded and verified
-
-**Success criterion:** the report flags the known MIT ambiguities that 30 years
-of litigation have identified. The sublicense constraint is formally proved.
-The tool works end-to-end with no hand-written Lean 4.
-
-### Phase 2 — GDPR Compliance
-
-- `frameworks/eu/gdpr.md` — formal GDPR axioms
-- `definitions/data/gdpr.md` — GDPR vocabulary
-- `regulations/gdpr.md` — full GDPR encoding
-- BPMN 2.0 reader
-- Process compliance checker
-- Compliance report with per-element, per-article findings
-
-**Success criterion:** `opennorm check-bpmn process.bpmn --regulation regulations/gdpr.md`
-returns correct, article-cited findings. A known non-compliant process fails.
-A known compliant process passes with a clean sorry inventory for genuinely
-undecidable obligations.
-
-### Phase 3 — Contracts and Community
-
-- Apache 2.0 encoded
-- GPL 3.0 encoded
-- License compatibility oracle
-- LSP server implemented
-- Query layer implemented
-- `frameworks/common-law/contracts.md`
-- `frameworks/civil-law/contracts.md`
-- Contract template
-
-**Success criterion:** `opennorm query "compatible mit.md apache2.md"` returns
-a correct, cited answer. One real organisation uses OpenNorm for internal governance.
-
-### Phase 4 — Institutional
-
-- NGO and DAO charter templates
-- Multi-jurisdiction framework layers
-- Treaty language encoding
-- Amendment proposal documents
-- Additional EU framework layers (ePrivacy, AI Act)
-
-**Success criterion:** one international body uses OpenNorm for a real document.
-One regulatory body accepts an OpenNorm compliance report as formal evidence.
-
----
-
-*OpenNorm v0.2 — Project Documentation*
-*Status: Pre-implementation (Phase 1 in progress)*
-*First pull request: stdlib/frameworks/universal/core.md*
